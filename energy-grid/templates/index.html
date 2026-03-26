@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block title %}Energy Grid{% endblock %}
+{% block accent_color %}#f59e0b{% endblock %}
+{% block accent_dim %}#78350f{% endblock %}
+{% block nav_energy %}class="active"{% endblock %}
+
+{% block head %}
+<script src="https://d3js.org/d3.v7.min.js"></script>
+{% endblock %}
+
+{% block styles %}
+.dashboard {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    grid-template-rows: auto 1fr;
+    gap: 1rem;
+    padding: 1rem;
+    height: 100%;
+    overflow: hidden;
+}
+
+.iso-selector {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.iso-buttons {
+    display: flex;
+    gap: 0.375rem;
+    flex-wrap: wrap;
+}
+
+.iso-btn {
+    padding: 0.375rem 0.75rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 0.375rem;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.iso-btn:hover { border-color: var(--text-muted); color: var(--text-primary); }
+.iso-btn.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.chart-area {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-height: 0;
+}
+
+.chart-panel {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.chart-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.chart-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+#fuel-chart {
+    flex: 1;
+    min-height: 0;
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    overflow-y: auto;
+}
+
+/* Current mix donut */
+.donut-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+#donut-chart {
+    width: 140px;
+    height: 140px;
+    flex-shrink: 0;
+}
+
+.donut-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.legend-value {
+    font-family: var(--font-mono);
+    color: var(--text-secondary);
+    margin-left: auto;
+    padding-left: 0.5rem;
+}
+
+/* Stats cards */
+.stat-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+}
+
+.stat-card {
+    background: var(--bg-tertiary);
+    border-radius: 0.375rem;
+    padding: 0.75rem;
+    text-align: center;
+}
+
+.stat-card-value {
+    font-family: var(--font-mono);
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.stat-card-label {
+    font-size: 0.625rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 0.125rem;
+}
+
+/* Advice cards */
+.advice-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.advice-card {
+    background: var(--bg-tertiary);
+    border-radius: 0.375rem;
+    padding: 0.75rem;
+    border-left: 3px solid var(--border);
+}
+
+.advice-card.best { border-left-color: #22c55e; }
+.advice-card.good { border-left-color: #f59e0b; }
+.advice-card.avoid { border-left-color: #ef4444; }
+
+.advice-time {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.advice-detail {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 0.125rem;
+}
+
+.advice-tag {
+    display: inline-block;
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    margin-top: 0.25rem;
+}
+.advice-tag.best { background: rgba(34,197,94,0.15); color: #22c55e; }
+.advice-tag.good { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.advice-tag.avoid { background: rgba(239,68,68,0.15); color: #ef4444; }
+
+.loading-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="iso-selector">
+        <span class="chart-title">Region</span>
+        <div class="iso-buttons" id="iso-buttons">
+            {% for code, name in isos.items() %}
+            <button class="iso-btn{% if code == 'CISO' %} active{% endif %}"
+                    data-iso="{{ code }}" title="{{ name }}">
+                {{ code }}
+            </button>
+            {% endfor %}
+        </div>
+        <select id="hours-select" class="feed-btn" style="font-family: var(--font-mono); margin-left: auto;">
+            <option value="24" selected>24h</option>
+            <option value="48">48h</option>
+            <option value="72">3 days</option>
+            <option value="168">7 days</option>
+        </select>
+    </div>
+
+    <div class="chart-area">
+        <div class="chart-panel">
+            <div class="chart-panel-header">
+                <span class="chart-title">Generation by Fuel Type</span>
+                <span class="chart-title" id="chart-iso-label">CISO</span>
+            </div>
+            <div id="fuel-chart">
+                <div class="loading-state">
+                    <div class="feed-spinner" style="margin-right: 0.5rem;"></div>
+                    Loading fuel mix data...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <div class="feed-panel">
+            <div class="feed-panel-title">Current Mix</div>
+            <div class="stat-cards">
+                <div class="stat-card">
+                    <div class="stat-card-value" id="carbon-value" style="color: #22c55e;">--</div>
+                    <div class="stat-card-label">gCO2/kWh</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value" id="renewable-value" style="color: var(--accent);">--</div>
+                    <div class="stat-card-label">% Renewable</div>
+                </div>
+            </div>
+            <div class="donut-container" style="margin-top: 1rem;">
+                <svg id="donut-chart"></svg>
+                <div class="donut-legend" id="donut-legend"></div>
+            </div>
+        </div>
+
+        <div class="feed-panel">
+            <div class="feed-panel-title">Smart Timing Advice</div>
+            <div class="advice-section" id="advice-cards">
+                <div class="loading-state" style="height: auto; padding: 1rem;">
+                    <div class="feed-spinner" style="margin-right: 0.5rem;"></div>
+                    Analyzing patterns...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/charts.js"></script>
+{% endblock %}

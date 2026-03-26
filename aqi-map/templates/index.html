@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}AQI Time-Slider Map{% endblock %}
+{% block accent_color %}#10b981{% endblock %}
+{% block accent_dim %}#064e3b{% endblock %}
+{% block nav_aqi %}class="active"{% endblock %}
+
+{% block head %}
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/deck.gl@9.0.16/dist.min.js"></script>
+{% endblock %}
+
+{% block styles %}
+.map-container {
+    position: absolute;
+    inset: 0;
+}
+#map { width: 100%; height: 100%; }
+
+.controls-overlay {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    z-index: 10;
+    pointer-events: none;
+}
+.controls-overlay > * { pointer-events: auto; }
+
+.slider-panel {
+    background: rgba(15, 23, 42, 0.92);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 1rem 1.5rem;
+    min-width: 500px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.slider-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.slider-date {
+    font-family: var(--font-mono);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.slider-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.slider-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.slider-row input[type="range"] {
+    flex: 1;
+}
+
+.month-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.625rem;
+    color: var(--text-muted);
+    padding: 0 2px;
+}
+
+.legend {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10;
+    background: rgba(15, 23, 42, 0.92);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+}
+
+.legend-title {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.legend-bar {
+    width: 200px;
+    height: 12px;
+    border-radius: 6px;
+    background: linear-gradient(to right, #00e400, #ffff00, #ff7e00, #ff0000, #8f3f97, #7e0023);
+}
+
+.legend-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.625rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+.stats-panel {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    z-index: 10;
+    background: rgba(15, 23, 42, 0.92);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+}
+
+.stats-row {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-value {
+    font-family: var(--font-mono);
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.stat-label {
+    font-size: 0.625rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.play-btn {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.play-btn:hover { background: var(--border); }
+.play-btn.playing { background: var(--accent-dim); border-color: var(--accent); }
+{% endblock %}
+
+{% block content %}
+<div class="map-container">
+    <div id="map"></div>
+</div>
+
+<div class="legend">
+    <div class="legend-title">AQI (PM2.5)</div>
+    <div class="legend-bar"></div>
+    <div class="legend-labels">
+        <span>0 Good</span>
+        <span>50</span>
+        <span>100</span>
+        <span>150</span>
+        <span>200</span>
+        <span>300+</span>
+    </div>
+</div>
+
+<div class="stats-panel">
+    <div class="stats-row">
+        <div class="stat-item">
+            <span class="stat-value" id="stat-stations">--</span>
+            <span class="stat-label">Stations</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-value" id="stat-avg" style="color: var(--accent);">--</span>
+            <span class="stat-label">Avg AQI</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-value" id="stat-max" style="color: #ff7e00;">--</span>
+            <span class="stat-label">Max AQI</span>
+        </div>
+    </div>
+</div>
+
+<div class="controls-overlay">
+    <div class="slider-panel">
+        <div class="slider-header">
+            <div class="slider-date" id="current-date">Loading...</div>
+            <div class="slider-controls">
+                <select id="year-select" class="feed-btn" style="font-family: var(--font-mono);"></select>
+                <button class="play-btn" id="play-btn" title="Play/Pause">
+                    <svg id="play-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5,3 19,12 5,21"/>
+                    </svg>
+                    <svg id="pause-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+                        <rect x="6" y="4" width="4" height="16"/>
+                        <rect x="14" y="4" width="4" height="16"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="slider-row">
+            <input type="range" class="feed-slider" id="month-slider" min="1" max="12" value="1" step="1">
+        </div>
+        <div class="month-labels">
+            <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span>
+            <span>May</span><span>Jun</span><span>Jul</span><span>Aug</span>
+            <span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const MAPBOX_TOKEN = '{{ mapbox_token }}';
+</script>
+<script src="/static/js/map.js"></script>
+{% endblock %}
