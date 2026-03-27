@@ -4,6 +4,7 @@ import socket
 import sys
 from pathlib import Path
 
+import jinja2
 import uvicorn
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -58,9 +59,13 @@ def create_app(
             name="shared-static",
         )
 
-    # Templates: app-specific first, then shared
-    template_dirs = [str(app_dir / "templates"), str(shared_dir / "templates")]
-    templates = Jinja2Templates(directory=template_dirs)
+    # Templates: app-specific first, then shared (use ChoiceLoader for Python 3.14 compat)
+    loader = jinja2.ChoiceLoader([
+        jinja2.FileSystemLoader(str(app_dir / "templates")),
+        jinja2.FileSystemLoader(str(shared_dir / "templates")),
+    ])
+    env = jinja2.Environment(loader=loader, autoescape=True, auto_reload=True, cache_size=0)
+    templates = Jinja2Templates(env=env)
 
     return app, templates
 

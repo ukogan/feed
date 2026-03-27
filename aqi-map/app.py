@@ -35,8 +35,7 @@ def get_db() -> sqlite3.Connection:
 @app.get("/")
 async def index(request: Request):
     mapbox_token = os.getenv("MAPBOX_TOKEN", "")
-    return templates.TemplateResponse("index.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "index.html", {
         "mapbox_token": mapbox_token,
     })
 
