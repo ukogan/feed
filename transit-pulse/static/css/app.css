@@ -1,0 +1,69 @@
+/* Transit Pulse app-specific styles */
+
+.mapboxgl-popup-content {
+    background: rgba(15, 23, 42, 0.92) !important;
+    color: #f1f5f9 !important;
+    border: 1px solid #334155 !important;
+    border-radius: 0.5rem !important;
+    padding: 0.5rem 0.75rem !important;
+    font-family: 'Inter', sans-serif !important;
+}
+
+.mapboxgl-popup-tip {
+    border-top-color: rgba(15, 23, 42, 0.92) !important;
+}
+
+.popup-title {
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+.popup-detail {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    line-height: 1.5;
+}
+
+.popup-detail strong {
+    color: #f1f5f9;
+}
+
+/* D3 chart styles */
+.bar-label {
+    fill: #94a3b8;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+}
+
+.bar-value {
+    fill: #f1f5f9;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+}
+
+.axis text {
+    fill: #64748b;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+}
+
+.axis line,
+.axis path {
+    stroke: #334155;
+}
+
+.grid line {
+    stroke: rgba(51, 65, 85, 0.4);
+    stroke-dasharray: 2 2;
+}
+
+.grid path {
+    stroke: none;
+}
+
+/* Scrollbar styling */
+.station-list::-webkit-scrollbar { width: 6px; }
+.station-list::-webkit-scrollbar-track { background: transparent; }
+.station-list::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 3px; }
+.station-list::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
