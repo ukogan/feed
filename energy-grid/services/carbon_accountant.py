@@ -138,7 +138,9 @@ def calculate_personal_carbon(
     for hour in range(24):
         kwh = usage_profile[hour]
         grid = hourly_map.get(hour, {})
-        carbon_intensity = grid.get("carbon_intensity", 400)
+        # Use average of available hours as default, not hardcoded 400
+        avg_available = sum(h.get("carbon_intensity", 0) for h in hourly_map.values()) / max(len(hourly_map), 1)
+        carbon_intensity = grid.get("carbon_intensity", avg_available if avg_available > 0 else 200)
         renewable_pct = grid.get("renewable_pct", 0)
 
         co2_g = kwh * carbon_intensity
@@ -261,8 +263,10 @@ def optimize_usage(
     optimized_result = calculate_personal_carbon(optimized, fuel_mix_records, period_days)
 
     co2_saved_kg = original_result["period_co2_kg"] - optimized_result["period_co2_kg"]
+    # Cap savings at realistic bounds (can't save more than 100%)
+    co2_saved_kg = max(0, min(co2_saved_kg, original_result["period_co2_kg"]))
     co2_saved_pct = (
-        (co2_saved_kg / original_result["period_co2_kg"] * 100)
+        min(100.0, (co2_saved_kg / original_result["period_co2_kg"] * 100))
         if original_result["period_co2_kg"] > 0
         else 0
     )
