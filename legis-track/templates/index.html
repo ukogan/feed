@@ -1,0 +1,367 @@
+{% extends "base.html" %}
+
+{% block title %}Legis Track{% endblock %}
+{% block accent_color %}#eab308{% endblock %}
+{% block accent_dim %}#713f12{% endblock %}
+{% block nav_legis %}class="active"{% endblock %}
+
+{% block head %}
+<script src="https://d3js.org/d3.v7.min.js"></script>
+{% endblock %}
+
+{% block styles %}
+.dashboard {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    grid-template-rows: auto 1fr;
+    gap: 1rem;
+    padding: 1rem;
+    height: 100%;
+    overflow: hidden;
+}
+
+.sample-banner {
+    grid-column: 1 / -1;
+    background: #713f12;
+    border: 1px solid #eab308;
+    border-radius: 0.375rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+    color: #fef08a;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.sample-banner svg {
+    flex-shrink: 0;
+}
+
+.member-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    overflow-y: auto;
+}
+
+.search-box {
+    position: relative;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    padding-left: 2rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 0.375rem;
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+    outline: none;
+}
+.search-input:focus {
+    border-color: var(--accent);
+}
+
+.search-icon {
+    position: absolute;
+    left: 0.625rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.member-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.member-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.625rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 0.8125rem;
+}
+.member-item:hover {
+    border-color: var(--text-muted);
+}
+.member-item.active {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+}
+
+.party-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 50%;
+    font-size: 0.625rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.party-badge.D { background: #1d4ed8; color: #93c5fd; }
+.party-badge.R { background: #b91c1c; color: #fca5a5; }
+.party-badge.I { background: #4b5563; color: #d1d5db; }
+
+.member-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-secondary);
+}
+
+.member-state {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+}
+
+.main-area {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    overflow-y: auto;
+}
+
+.tab-bar {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.tab-btn {
+    padding: 0.375rem 0.75rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 0.375rem 0.375rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    border-bottom: none;
+}
+.tab-btn:hover { color: var(--text-secondary); }
+.tab-btn.active {
+    background: var(--bg-secondary);
+    color: var(--accent);
+    border-color: var(--accent);
+    border-bottom: 1px solid var(--bg-secondary);
+    margin-bottom: -1px;
+    position: relative;
+    z-index: 1;
+}
+
+.tab-content {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 0 0.5rem 0.5rem 0.5rem;
+    padding: 1rem;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.tab-pane {
+    display: none;
+}
+.tab-pane.active {
+    display: block;
+}
+
+/* Timeline */
+#timeline-chart {
+    width: 100%;
+    min-height: 300px;
+}
+
+/* Trades table */
+.trades-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+}
+
+.trades-table th {
+    text-align: left;
+    padding: 0.5rem 0.625rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.trades-table td {
+    padding: 0.5rem 0.625rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+}
+
+.trades-table tr:hover td {
+    background: var(--bg-tertiary);
+}
+
+.trade-type {
+    display: inline-block;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+}
+.trade-type.Purchase { background: rgba(34,197,94,0.15); color: #22c55e; }
+.trade-type.Sale { background: rgba(239,68,68,0.15); color: #ef4444; }
+
+.flag-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.375rem;
+    background: rgba(245,158,11,0.15);
+    color: #f59e0b;
+    border-radius: 0.25rem;
+    font-size: 0.625rem;
+    font-weight: 600;
+}
+
+/* Bills list */
+.bill-item {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border);
+}
+.bill-item:last-child { border-bottom: none; }
+
+.bill-id {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--accent);
+}
+
+.bill-title {
+    font-size: 0.8125rem;
+    color: var(--text-primary);
+    margin-top: 0.25rem;
+}
+
+.bill-meta {
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+.bill-subjects {
+    display: flex;
+    gap: 0.25rem;
+    margin-top: 0.375rem;
+    flex-wrap: wrap;
+}
+
+.subject-tag {
+    padding: 0.125rem 0.375rem;
+    background: var(--bg-tertiary);
+    border-radius: 0.25rem;
+    font-size: 0.625rem;
+    color: var(--text-secondary);
+}
+
+.loading-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    {% if not has_keys %}
+    <div class="sample-banner">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span>API keys not configured. Showing SAMPLE_DATA to demonstrate functionality. Set CONGRESS_API_KEY, FEC_API_KEY, PROPUBLICA_API_KEY in .env for live data.</span>
+    </div>
+    {% endif %}
+
+    <div class="member-panel">
+        <div class="search-box">
+            <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" class="search-input" id="member-search" placeholder="Search members...">
+        </div>
+        <div class="feed-panel-title">Members</div>
+        <div class="member-list" id="member-list">
+            <div class="loading-state" style="height:auto; padding:1rem;">
+                <div class="feed-spinner" style="margin-right:0.5rem;"></div>
+                Loading members...
+            </div>
+        </div>
+    </div>
+
+    <div class="main-area">
+        <div class="tab-bar">
+            <button class="tab-btn active" data-tab="timeline">Timeline</button>
+            <button class="tab-btn" data-tab="trades">Trades</button>
+            <button class="tab-btn" data-tab="bills">Bills</button>
+            <button class="tab-btn" data-tab="flagged">Flagged</button>
+        </div>
+        <div class="tab-content">
+            <div class="tab-pane active" id="tab-timeline">
+                <div id="timeline-chart">
+                    <div class="loading-state">
+                        <div class="feed-spinner" style="margin-right:0.5rem;"></div>
+                        Loading timeline...
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane" id="tab-trades">
+                <table class="trades-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Member</th>
+                            <th>Type</th>
+                            <th>Ticker</th>
+                            <th>Company</th>
+                            <th>Amount</th>
+                            <th>Sector</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trades-body">
+                        <tr><td colspan="7" class="loading-state" style="height:auto; padding:1rem;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="tab-pane" id="tab-bills">
+                <div id="bills-list">
+                    <div class="loading-state" style="height:auto; padding:1rem;">
+                        <div class="feed-spinner" style="margin-right:0.5rem;"></div>
+                        Loading bills...
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane" id="tab-flagged">
+                <div id="flagged-list">
+                    <div class="loading-state" style="height:auto; padding:1rem;">
+                        <div class="feed-spinner" style="margin-right:0.5rem;"></div>
+                        Analyzing trades...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/app.js"></script>
+{% endblock %}

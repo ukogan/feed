@@ -1,0 +1,381 @@
+{% extends "base.html" %}
+
+{% block title %}Court Flow{% endblock %}
+{% block accent_color %}#ec4899{% endblock %}
+{% block accent_dim %}#831843{% endblock %}
+{% block nav_courts %}class="active"{% endblock %}
+
+{% block head %}
+<script src="https://d3js.org/d3.v7.min.js"></script>
+{% endblock %}
+
+{% block styles %}
+.dashboard {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    grid-template-rows: auto 1fr;
+    gap: 1rem;
+    padding: 1rem;
+    height: 100%;
+    overflow: hidden;
+}
+
+.search-bar {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.search-input-wrap {
+    position: relative;
+    flex: 1;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.625rem 1rem;
+    padding-left: 2.25rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    outline: none;
+    transition: border-color 0.15s;
+}
+.search-input:focus { border-color: var(--accent); }
+
+.search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.court-select {
+    padding: 0.625rem 0.75rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+    outline: none;
+}
+
+.main-area {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.chart-panel {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    min-height: 250px;
+}
+
+.chart-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.chart-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+#heatmap-chart, #timeline-chart {
+    flex: 1;
+    min-height: 0;
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    overflow-y: auto;
+}
+
+.stat-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+}
+
+.stat-card {
+    background: var(--bg-tertiary);
+    border-radius: 0.375rem;
+    padding: 0.75rem;
+    text-align: center;
+}
+
+.stat-card-value {
+    font-family: var(--font-mono);
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.stat-card-label {
+    font-size: 0.625rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 0.125rem;
+}
+
+.trending-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.trending-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.625rem;
+    background: var(--bg-tertiary);
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 0.8125rem;
+}
+.trending-item:hover {
+    background: var(--border);
+}
+
+.trending-rank {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    width: 1.25rem;
+    text-align: center;
+}
+
+.trending-topic {
+    flex: 1;
+    color: var(--text-secondary);
+    text-transform: capitalize;
+}
+
+.trending-count {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--accent);
+}
+
+/* Results list */
+.results-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.result-item {
+    padding: 0.75rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 0.375rem;
+    transition: border-color 0.15s;
+}
+.result-item:hover { border-color: var(--text-muted); }
+
+.result-case-name {
+    font-size: 0.8125rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.result-case-name a {
+    color: var(--accent);
+    text-decoration: none;
+}
+.result-case-name a:hover { text-decoration: underline; }
+
+.result-meta {
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+    display: flex;
+    gap: 0.75rem;
+}
+
+.result-snippet {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 0.375rem;
+    line-height: 1.6;
+}
+
+.court-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.court-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+}
+
+.court-bar-bg {
+    flex: 1;
+    height: 6px;
+    background: var(--bg-primary);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.court-bar {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+    transition: width 0.3s;
+}
+
+.court-name {
+    width: 120px;
+    font-size: 0.6875rem;
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.court-count {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    width: 2rem;
+    text-align: right;
+}
+
+.loading-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="search-bar">
+        <div class="search-input-wrap">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" class="search-input" id="search-input" placeholder="Search federal litigation (e.g., antitrust, patent, securities)..." value="antitrust">
+        </div>
+        <select class="court-select" id="court-select">
+            <option value="">All Courts</option>
+            {% for code, name in courts.items() %}
+            <option value="{{ code }}">{{ name }}</option>
+            {% endfor %}
+        </select>
+        <button class="feed-btn feed-btn-accent" id="search-btn">Search</button>
+    </div>
+
+    <div class="main-area">
+        <div class="chart-panel">
+            <div class="chart-panel-header">
+                <span class="chart-title">Court Activity</span>
+                <span class="chart-title" id="query-label">antitrust</span>
+            </div>
+            <div id="heatmap-chart">
+                <div class="loading-state">
+                    <div class="feed-spinner" style="margin-right: 0.5rem;"></div>
+                    Loading court data...
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-panel">
+            <div class="chart-panel-header">
+                <span class="chart-title">Filing Timeline</span>
+            </div>
+            <div id="timeline-chart">
+                <div class="loading-state">
+                    <div class="feed-spinner" style="margin-right: 0.5rem;"></div>
+                    Loading timeline...
+                </div>
+            </div>
+        </div>
+
+        <div class="feed-panel" style="margin-top: 0;">
+            <div class="feed-panel-title">Search Results</div>
+            <div class="results-list" id="results-list">
+                <div class="loading-state" style="height:auto; padding:1rem;">
+                    <div class="feed-spinner" style="margin-right:0.5rem;"></div>
+                    Searching...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <div class="feed-panel">
+            <div class="feed-panel-title">Stats</div>
+            <div class="stat-cards">
+                <div class="stat-card">
+                    <div class="stat-card-value" id="total-filings" style="color: var(--accent);">--</div>
+                    <div class="stat-card-label">Filings</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value" id="courts-count" style="color: #38bdf8;">--</div>
+                    <div class="stat-card-label">Courts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value" id="per-day" style="color: #10b981;">--</div>
+                    <div class="stat-card-label">Per Day</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-value" id="date-range" style="color: #a78bfa; font-size: 0.75rem;">--</div>
+                    <div class="stat-card-label">Date Range</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="feed-panel">
+            <div class="feed-panel-title">Courts Breakdown</div>
+            <div class="court-breakdown" id="court-breakdown">
+                <div class="loading-state" style="height:auto; padding:1rem;">
+                    <div class="feed-spinner" style="margin-right:0.5rem;"></div>
+                    Loading...
+                </div>
+            </div>
+        </div>
+
+        <div class="feed-panel">
+            <div class="feed-panel-title">Trending Topics</div>
+            <div class="trending-list" id="trending-list">
+                <div class="loading-state" style="height:auto; padding:1rem;">
+                    <div class="feed-spinner" style="margin-right:0.5rem;"></div>
+                    Analyzing trends...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/app.js"></script>
+{% endblock %}
