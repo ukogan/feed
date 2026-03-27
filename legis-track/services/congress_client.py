@@ -1,7 +1,8 @@
 """Congress data client with sample data fallback.
 
-Uses Congress.gov API, FEC API, and ProPublica API when keys are available.
+Uses Congress.gov API and FEC API when keys are available.
 Falls back to clearly labeled SAMPLE_DATA when keys are not set.
+Stock trade data always uses sample data (no free public API exists).
 """
 
 import os
@@ -12,7 +13,6 @@ import httpx
 
 CONGRESS_API_KEY = os.getenv("CONGRESS_API_KEY", "")
 FEC_API_KEY = os.getenv("FEC_API_KEY", "")
-PROPUBLICA_API_KEY = os.getenv("PROPUBLICA_API_KEY", "")
 
 
 # ── Sample Data (used when API keys are not configured) ──
@@ -355,7 +355,6 @@ def _is_api_available() -> dict:
     return {
         "congress": bool(CONGRESS_API_KEY),
         "fec": bool(FEC_API_KEY),
-        "propublica": bool(PROPUBLICA_API_KEY),
     }
 
 
