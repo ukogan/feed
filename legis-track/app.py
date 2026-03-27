@@ -5,6 +5,10 @@ import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
+
+# Load .env BEFORE importing services (they read os.getenv at module level)
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+
 from fastapi import Query, Request
 from fastapi.responses import JSONResponse
 
@@ -20,8 +24,6 @@ from services.congress_client import (
     is_live,
 )
 from services.analysis import build_timeline
-
-load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 APP_DIR = Path(__file__).parent
 
