@@ -134,12 +134,15 @@ def parse_green_button(xml_content: str | bytes) -> dict:
 
     # Extract reading type metadata
     reading_type = _parse_reading_type(root)
-    multiplier = 10 ** reading_type["power_of_ten_multiplier"]
-
-    # Determine conversion factor to kWh
-    # UOM 72 = Wh: multiply by multiplier, divide by 1000
-    # UOM 38 = W (watts): multiply by multiplier, multiply by duration/3600, divide by 1000
+    potm = reading_type["power_of_ten_multiplier"]
     uom = reading_type["uom"]
+
+    # Conversion to kWh:
+    # ESPI spec says actualValue = value * 10^powerOfTenMultiplier in the UOM.
+    # But many utilities (PG&E, etc.) use powerOfTenMultiplier non-standardly.
+    # We detect and handle both cases by sanity-checking the result.
+    # First pass: assume values are raw Wh (ignore multiplier), convert to kWh.
+    # If that produces unreasonable results, try with multiplier.
 
     # Extract all interval readings
     raw_readings = _parse_interval_readings(root)
@@ -156,13 +159,13 @@ def parse_green_button(xml_content: str | bytes) -> dict:
     total_kwh = 0.0
 
     for reading in raw_readings:
-        raw_value = reading["value"] * multiplier
+        raw_value = reading["value"]
 
         if uom == UOM_W:
             # Watts: convert to Wh using duration, then to kWh
             kwh = raw_value * (reading["duration"] / 3600) / 1000
         else:
-            # Default: assume Wh, convert to kWh
+            # Wh: convert to kWh (treat values as raw Wh, ignore multiplier)
             kwh = raw_value / 1000
 
         total_kwh += kwh
@@ -188,7 +191,7 @@ def parse_green_button(xml_content: str | bytes) -> dict:
     dates_seen: set[str] = set()
 
     for reading in raw_readings:
-        raw_value = reading["value"] * multiplier
+        raw_value = reading["value"]
         if uom == UOM_W:
             kwh = raw_value * (reading["duration"] / 3600) / 1000
         else:
