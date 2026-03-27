@@ -1,0 +1,454 @@
+{% extends "base.html" %}
+
+{% block title %}Carbon Accountant - Energy Grid{% endblock %}
+{% block accent_color %}#f59e0b{% endblock %}
+{% block accent_dim %}#78350f{% endblock %}
+{% block nav_energy %}class="active"{% endblock %}
+
+{% block head %}
+<script src="https://d3js.org/d3.v7.min.js"></script>
+{% endblock %}
+
+{% block styles %}
+.carbon-page {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    grid-template-rows: auto 1fr;
+    gap: 1rem;
+    padding: 1rem;
+    height: 100%;
+    overflow: hidden;
+}
+
+.carbon-header {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.carbon-header h1 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.8125rem;
+    transition: color 0.15s;
+}
+.back-link:hover { color: var(--text-primary); }
+
+/* Input panel */
+.input-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    overflow-y: auto;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.form-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+.form-select {
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 0.375rem;
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+    cursor: pointer;
+    width: 100%;
+}
+.form-select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+/* Usage editor */
+.usage-editor {
+    background: var(--bg-tertiary);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+}
+
+.usage-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 120px;
+    padding-bottom: 1.25rem;
+    position: relative;
+}
+
+.usage-bar-wrapper {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    position: relative;
+    cursor: ns-resize;
+}
+
+.usage-bar {
+    width: 100%;
+    background: var(--accent);
+    border-radius: 2px 2px 0 0;
+    min-height: 2px;
+    transition: background 0.1s;
+    position: relative;
+}
+.usage-bar-wrapper:hover .usage-bar {
+    background: #fbbf24;
+}
+.usage-bar-wrapper.dragging .usage-bar {
+    background: #fbbf24;
+}
+
+.usage-bar-label {
+    position: absolute;
+    bottom: -1.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.5rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.usage-bar-value {
+    position: absolute;
+    top: -1rem;
+    font-family: var(--font-mono);
+    font-size: 0.5rem;
+    color: var(--accent);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.1s;
+}
+.usage-bar-wrapper:hover .usage-bar-value,
+.usage-bar-wrapper.dragging .usage-bar-value {
+    opacity: 1;
+}
+
+.usage-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.75rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.usage-total-value {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.analyze-btn {
+    width: 100%;
+    padding: 0.625rem;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    border-radius: 0.375rem;
+    color: var(--accent);
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.analyze-btn:hover {
+    background: var(--accent);
+    color: var(--bg-primary);
+}
+.analyze-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.upload-btn {
+    width: 100%;
+    padding: 0.5rem;
+    background: var(--bg-tertiary);
+    border: 1px dashed var(--border);
+    border-radius: 0.375rem;
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    cursor: not-allowed;
+    text-align: center;
+    position: relative;
+}
+.upload-btn-tooltip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 0.5rem);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 0.375rem;
+    padding: 0.375rem 0.625rem;
+    font-size: 0.6875rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    z-index: 10;
+}
+.upload-btn:hover .upload-btn-tooltip {
+    display: block;
+}
+
+/* Results panel */
+.results-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    overflow-y: auto;
+}
+
+.results-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+/* Big stat row */
+.big-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+}
+
+.big-stat {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    text-align: center;
+}
+
+.big-stat-value {
+    font-family: var(--font-mono);
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.big-stat-unit {
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: var(--text-muted);
+}
+
+.big-stat-label {
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 0.25rem;
+}
+
+.big-stat-sub {
+    font-size: 0.6875rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+.stat-positive { color: #ef4444; }
+.stat-negative { color: #22c55e; }
+
+/* Charts */
+.chart-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.chart-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-card-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+}
+
+.chart-card svg {
+    width: 100%;
+}
+
+/* Optimization card */
+.opt-card {
+    background: var(--bg-secondary);
+    border: 1px solid #22c55e;
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+.opt-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.opt-card-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #22c55e;
+}
+
+.opt-summary {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.opt-highlight {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: #22c55e;
+}
+
+.opt-hours {
+    display: flex;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
+
+.opt-hour-tag {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.25rem;
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+}
+
+.opt-hour-tag.dirty {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.loading-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    padding: 2rem;
+}
+{% endblock %}
+
+{% block content %}
+<div class="carbon-page">
+    <div class="carbon-header">
+        <a href="/" class="back-link">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            Dashboard
+        </a>
+        <h1>Personal Carbon Accountant</h1>
+        <span style="flex:1"></span>
+    </div>
+
+    <div class="input-panel">
+        <div class="feed-panel">
+            <div class="feed-panel-title">Your Usage Profile</div>
+
+            <div class="form-group">
+                <label class="form-label" for="carbon-iso">Region (ISO)</label>
+                <select id="carbon-iso" class="form-select">
+                    {% for code, name in isos.items() %}
+                    <option value="{{ code }}" {% if code == 'CISO' %}selected{% endif %}>
+                        {{ code }} -- {{ name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-top: 0.5rem;">
+                <label class="form-label" for="profile-preset">Preset Profile</label>
+                <select id="profile-preset" class="form-select">
+                    <option value="average_household" selected>Average Household (~30 kWh/day)</option>
+                    <option value="ev_owner">EV Owner (~45 kWh/day)</option>
+                    <option value="work_from_home">Work From Home (~35 kWh/day)</option>
+                    <option value="nine_to_five">9-5 Worker (~28 kWh/day)</option>
+                    <option value="custom">Custom</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-top: 0.5rem;">
+                <label class="form-label">Hourly Usage (kWh) -- drag bars to adjust</label>
+                <div class="usage-editor">
+                    <div class="usage-bars" id="usage-bars"></div>
+                    <div class="usage-total">
+                        <span>Daily total:</span>
+                        <span class="usage-total-value" id="usage-total">-- kWh</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 0.5rem;">
+                <label class="form-label" for="period-select">Analysis Period</label>
+                <select id="period-select" class="form-select">
+                    <option value="1">1 day</option>
+                    <option value="7" selected>7 days</option>
+                    <option value="30">30 days</option>
+                </select>
+            </div>
+
+            <button class="analyze-btn" id="analyze-btn" style="margin-top: 0.75rem;">
+                Analyze Carbon Footprint
+            </button>
+
+            <div class="upload-btn" style="margin-top: 0.5rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 0.25rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Upload Green Button XML
+                <div class="upload-btn-tooltip">Coming soon -- Green Button smart meter data import</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="results-panel" id="results-panel">
+        <div class="results-empty">
+            Select a usage profile and click "Analyze" to see your carbon footprint
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/carbon.js"></script>
+{% endblock %}

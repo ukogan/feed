@@ -7,6 +7,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import Query, Request
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -20,6 +21,12 @@ from services.carbon import (
     FUEL_INFO,
 )
 from services.advisor import analyze_hourly_patterns, get_best_windows
+from services.carbon_accountant import (
+    calculate_personal_carbon,
+    optimize_usage,
+    get_typical_profiles,
+    PRESET_PROFILES,
+)
 
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
@@ -179,6 +186,74 @@ async def data_sources(request: Request):
         ],
         "data_freshness": "Data is fetched directly from the EIA API on each request. The 4-6 hour lag means 'current' data reflects conditions several hours ago. The smart timing advisor analyzes 7-day patterns to recommend optimal usage windows.",
     })
+
+
+@app.get("/carbon")
+async def carbon_page(request: Request):
+    """Personal Carbon Accountant page."""
+    return templates.TemplateResponse(request, "carbon.html", {
+        "isos": MAJOR_ISOS,
+    })
+
+
+class CarbonAccountRequest(BaseModel):
+    iso: str = "CISO"
+    usage_profile: list[float]
+    period_days: int = 7
+
+
+@app.post("/api/carbon-account")
+async def carbon_account(req: CarbonAccountRequest):
+    """Analyze personal carbon footprint from usage profile."""
+    if not EIA_API_KEY:
+        return JSONResponse({"error": "EIA_API_KEY not set"}, status_code=500)
+
+    if len(req.usage_profile) != 24:
+        return JSONResponse(
+            {"error": "usage_profile must have exactly 24 values (one per hour)"},
+            status_code=400,
+        )
+
+    records = await fetch_fuel_mix(EIA_API_KEY, respondent=req.iso, hours_back=168)
+
+    carbon_result = calculate_personal_carbon(
+        req.usage_profile, records, req.period_days
+    )
+    optimization = optimize_usage(
+        req.usage_profile, records, req.period_days
+    )
+
+    return {
+        "iso": req.iso,
+        "carbon": carbon_result,
+        "optimization": optimization,
+    }
+
+
+@app.get("/api/carbon-account/presets")
+async def carbon_presets():
+    """Return preset usage profiles."""
+    return get_typical_profiles()
+
+
+@app.get("/api/carbon-account/demo")
+async def carbon_demo(iso: str = Query("CISO")):
+    """Demo analysis using average household profile."""
+    if not EIA_API_KEY:
+        return JSONResponse({"error": "EIA_API_KEY not set"}, status_code=500)
+
+    profile = PRESET_PROFILES["average_household"]["hourly_kwh"]
+    records = await fetch_fuel_mix(EIA_API_KEY, respondent=iso, hours_back=168)
+
+    carbon_result = calculate_personal_carbon(profile, records, period_days=7)
+    optimization = optimize_usage(profile, records, period_days=7)
+
+    return {
+        "iso": iso,
+        "profile_name": "Average Household",
+        "carbon": carbon_result,
+        "optimization": optimization,
+    }
 
 
 if __name__ == "__main__":
