@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Creek Level{% endblock %}
+{% block accent_color %}#06b6d4{% endblock %}
+{% block accent_dim %}#164e63{% endblock %}
+
+{% block head %}
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/deck.gl@latest/dist.min.js"></script>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<link rel="stylesheet" href="/static/css/app.css">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="controls-bar">
+        <div class="control-group">
+            <label class="control-label">State</label>
+            <select id="state-select" class="feed-select">
+                {% for code, name in states.items() %}
+                <option value="{{ code }}" {% if code == "CA" %}selected{% endif %}>{{ code }} - {{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="control-group search-group">
+            <label class="control-label">Search</label>
+            <input type="text" id="search-input" class="feed-input" placeholder="Filter by station name...">
+        </div>
+        <div class="control-group">
+            <span class="station-count" id="station-count">--</span>
+            <span class="control-label">gauges</span>
+        </div>
+        <div class="control-group">
+            <div class="legend">
+                <span class="legend-item"><span class="legend-dot" style="background: #3b82f6;"></span>Normal</span>
+                <span class="legend-item"><span class="legend-dot" style="background: #eab308;"></span>Rising</span>
+                <span class="legend-item"><span class="legend-dot" style="background: #ef4444;"></span>High</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="map-container" id="map-container">
+        <div id="map"></div>
+        <div class="map-loading" id="map-loading">
+            <div class="feed-spinner"></div>
+            <span>Loading gauges...</span>
+        </div>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2 class="feed-panel-title">Nearby Gauges</h2>
+        </div>
+        <div class="sidebar-content" id="sidebar-content">
+            <div class="sidebar-empty">Select a state to view gauge stations</div>
+        </div>
+        <div class="site-detail" id="site-detail" style="display: none;">
+            <div class="detail-header">
+                <button class="feed-btn detail-back" id="detail-back">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+                    Back
+                </button>
+                <h3 class="detail-title" id="detail-title"></h3>
+            </div>
+            <div class="detail-charts" id="detail-charts"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    window.MAPBOX_TOKEN = "{{ mapbox_token }}";
+</script>
+<script src="/static/js/map.js"></script>
+{% endblock %}

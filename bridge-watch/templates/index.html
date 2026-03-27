@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bridge Watch</title>
+    <link rel="stylesheet" href="/static/css/app.css" />
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css" rel="stylesheet" />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
+    <script src="https://unpkg.com/deck.gl@9.0.16/dist.min.js"></script>
+</head>
+<body>
+    <div id="map"></div>
+
+    <div id="controls">
+        <h1>
+            Bridge Watch
+            <span>National Bridge Inventory</span>
+        </h1>
+
+        <select id="state-select">
+            {% for code, name in state_codes.items() %}
+            <option value="{{ code }}"{% if code == '06' %} selected{% endif %}>
+                {{ name }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <div id="loading">Loading bridges...</div>
+
+        <div id="stats-panel">
+            <div class="stats-row">
+                <span class="label">Total bridges</span>
+                <span class="value" id="stat-total">--</span>
+            </div>
+            <div class="bar-container">
+                <div class="bar-segment bar-good" id="bar-good" style="width:0"></div>
+                <div class="bar-segment bar-fair" id="bar-fair" style="width:0"></div>
+                <div class="bar-segment bar-poor" id="bar-poor" style="width:0"></div>
+            </div>
+            <div class="stats-row">
+                <span class="label">Good (7-9)</span>
+                <span class="value good" id="stat-good">--</span>
+            </div>
+            <div class="stats-row">
+                <span class="label">Fair (5-6)</span>
+                <span class="value fair" id="stat-fair">--</span>
+            </div>
+            <div class="stats-row">
+                <span class="label">Poor (0-4)</span>
+                <span class="value poor" id="stat-poor">--</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="tooltip">
+        <h3 id="tip-name"></h3>
+        <div class="detail-row">
+            <span class="dl">Condition</span>
+            <span class="dv"><span id="tip-condition" class="condition-badge"></span></span>
+        </div>
+        <div class="detail-row">
+            <span class="dl">Year built</span>
+            <span class="dv" id="tip-year"></span>
+        </div>
+        <div class="detail-row">
+            <span class="dl">Daily traffic</span>
+            <span class="dv" id="tip-adt"></span>
+        </div>
+        <div class="detail-row">
+            <span class="dl">Deck</span>
+            <span class="dv" id="tip-deck"></span>
+        </div>
+        <div class="detail-row">
+            <span class="dl">Superstructure</span>
+            <span class="dv" id="tip-super"></span>
+        </div>
+        <div class="detail-row">
+            <span class="dl">Substructure</span>
+            <span class="dv" id="tip-sub"></span>
+        </div>
+    </div>
+
+    <div id="legend">
+        <div class="legend-item">
+            <div class="legend-dot good"></div>
+            <span>Good (7-9)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot fair"></div>
+            <span>Fair (5-6)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-dot poor"></div>
+            <span>Poor (0-4)</span>
+        </div>
+    </div>
+
+    <script>
+        window.MAPBOX_TOKEN = "{{ mapbox_token }}";
+    </script>
+    <script src="/static/js/map.js"></script>
+</body>
+</html>

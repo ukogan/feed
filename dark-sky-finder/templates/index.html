@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dark Sky Finder</title>
+    <link rel="stylesheet" href="/static/css/app.css" />
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.9.4/mapbox-gl.css" rel="stylesheet" />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.9.4/mapbox-gl.js"></script>
+    <script src="https://unpkg.com/deck.gl@9.1.4/dist.min.js"></script>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Map -->
+        <div class="map-container">
+            <div class="map-overlay-top">
+                <div class="app-title">
+                    <svg class="star-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                    <h1>Dark Sky Finder</h1>
+                </div>
+                <div class="search-box">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <input type="text" id="search-input" placeholder="Search a city or place..." />
+                </div>
+            </div>
+            <div id="map"></div>
+        </div>
+
+        <!-- Right panel -->
+        <div class="side-panel">
+            <div class="panel-header">
+                <h2>Tonight's Forecast</h2>
+                <p>Where should I stargaze tonight?</p>
+            </div>
+
+            <!-- Moon phase -->
+            <div class="panel-section">
+                <h3>Moon Phase</h3>
+                <div class="moon-display">
+                    <div class="moon-visual" id="moon-visual"></div>
+                    <div class="moon-info">
+                        <h4 id="moon-name">--</h4>
+                        <p id="moon-illumination">--</p>
+                        <span class="moon-quality" id="moon-quality">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nearest spots -->
+            <div class="panel-section">
+                <h3>Best Nearby Spots</h3>
+                <div class="spot-list" id="nearest-spots">
+                    <div class="loading-indicator">
+                        <div class="spinner"></div> Loading...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cloud cover -->
+            <div class="panel-section">
+                <h3>Cloud Cover (Tonight)</h3>
+                <div class="cloud-forecast" id="cloud-forecast">
+                    <div class="loading-indicator">
+                        <div class="spinner"></div> Loading...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Legend -->
+            <div class="legend">
+                <h3>Legend</h3>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:#22c55e"></div>
+                        Bortle 1 -- Pristine dark sky
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:#4ade80"></div>
+                        Bortle 2 -- Excellent dark sky
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:#a3e635"></div>
+                        Bortle 3 -- Rural sky
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:#facc15"></div>
+                        Bortle 4 -- Rural/suburban transition
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:rgba(239,68,68,0.5)"></div>
+                        Major city (light pollution)
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:rgba(34,197,94,0.3)"></div>
+                        Low cloud cover
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:rgba(239,68,68,0.4)"></div>
+                        High cloud cover
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>window.__MAPBOX_TOKEN = "{{ mapbox_token }}";</script>
+    <script src="/static/js/map.js"></script>
+</body>
+</html>
