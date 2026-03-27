@@ -101,6 +101,23 @@ async def data_sources(request: Request):
     return templates.TemplateResponse(request, "data-sources.html", {
         "app_name": "Dark Sky Finder",
         "app_description": "Find the best stargazing locations near you. Combines dark sky locations, cloud cover forecasts, and moon phase to recommend optimal viewing conditions.",
+        "vision_assessment": "The Open-Meteo cloud cover integration works and the 50 hardcoded IDA locations provide a starting point. But 50 points on a US map is sparse -- the app feels more like a curated list than a discovery tool. The fundamental missing piece is actual light pollution data. Without it, the app can only tell you 'go to these known dark spots' rather than 'here is an undiscovered dark spot 20 minutes from your house.' Uses a standalone template without shared nav.",
+        "killer_feature": "Tonight's sky score -- a single 0-100 rating for any location that combines real-time cloud cover forecast, moon phase and position, light pollution from satellite data, and atmospheric transparency. Push notifications when conditions align for exceptional stargazing at your saved locations. 'Your backyard is a 34 tonight, but drive 45 minutes to [location] for a 91.'",
+        "data_gaps": [
+            "No actual light pollution data layer -- only 50 hardcoded point locations",
+            "Standalone template without shared navigation (inconsistent with other apps)",
+            "No satellite pass predictions (ISS, Starlink, etc.)",
+            "No aurora visibility forecasts",
+            "No atmospheric transparency or seeing conditions data",
+            "Bortle class ratings are estimates, not measured values",
+            "No user-contributed dark sky locations",
+        ],
+        "related_apis": [
+            {"name": "NASA Black Marble (VNP46)", "url": "https://blackmarble.gsfc.nasa.gov/", "description": "Satellite-measured nighttime light emissions. The actual light pollution data layer needed to turn this from a curated list into a discovery tool.", "free": True},
+            {"name": "NOAA SWPC Aurora", "url": "https://services.swpc.noaa.gov/", "description": "Space Weather Prediction Center aurora forecasts. Kp index and ovation model for aurora visibility predictions.", "free": True},
+            {"name": "Heavens-Above / CelesTrak", "url": "https://celestrak.org/", "description": "Satellite pass predictions including ISS and Starlink trains. TLE orbital elements for computing visible passes.", "free": True},
+            {"name": "Clear Outside", "url": "https://clearoutside.com/", "description": "Astronomy-specific weather forecasts including seeing, transparency, and dew point. Purpose-built for stargazers.", "free": True},
+        ],
         "data_sources": [
             {
                 "name": "Open-Meteo Weather API",
@@ -126,7 +143,7 @@ async def data_sources(request: Request):
                 "rate_limits": "N/A",
                 "history": "Current certified locations",
                 "key_fields": ["name", "lat", "lng", "bortle_class", "designation"],
-                "caveats": "List may not include the most recently certified sites. Bortle class ratings are estimates and vary with atmospheric conditions.",
+                "caveats": "Only 50 locations -- sparse coverage. List may not include the most recently certified sites. Bortle class ratings are estimates.",
             },
             {
                 "name": "Moon Phase (computed)",
@@ -142,7 +159,7 @@ async def data_sources(request: Request):
                 "caveats": "Computed from a known new moon reference date. Accurate to within a few hours for illumination percentage.",
             },
         ],
-        "data_freshness": "Cloud cover forecasts are fetched in real-time from Open-Meteo. Dark sky locations are a static embedded dataset. Moon phase is computed client-side from astronomical algorithms, requiring no API call.",
+        "data_freshness": "Cloud cover forecasts are fetched in real-time from Open-Meteo. Dark sky locations are a static embedded dataset of ~50 IDA-certified places. Moon phase is computed client-side from astronomical algorithms, requiring no API call.",
     })
 
 

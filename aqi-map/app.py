@@ -103,19 +103,35 @@ async def data_sources(request: Request):
     return templates.TemplateResponse(request, "data-sources.html", {
         "app_name": "AQI Map",
         "app_description": "Historical air quality heatmap with animated time controls. Visualizes PM2.5 and Ozone readings from EPA monitoring stations across the US.",
+        "vision_assessment": "The vision of seasonal AQI maps is validated -- the deck.gl HeatmapLayer rendering is compelling with 1,790 stations loaded. But the EPA AQS API's rate limits and timeouts for large states (CA, TX timeout at 60 seconds) mean the data pipeline needs a bulk download approach rather than per-state API calls. Currently only NY, FL, and WA have PM2.5 data populated. The OpenWeatherMap API is listed as a source but not actively used in the MVP.",
+        "killer_feature": "Personal air quality biography -- enter any US address and see a complete history of what you've been breathing, month by month, going back to when you moved in. Overlay with wildfire smoke events from NOAA HMS, nearby industrial sources from EPA TRI, and health impact estimates from peer-reviewed PM2.5 exposure research.",
+        "data_gaps": [
+            "CA and TX stations timeout at 60s via API -- need EPA bulk CSV downloads instead",
+            "Only 3 of 50 states have PM2.5 data ingested so far (NY, FL, WA)",
+            "OpenWeatherMap API listed but not integrated in the current pipeline",
+            "No wildfire smoke overlay despite being the biggest AQI driver in western states",
+            "No industrial source proximity data (nearby factories, refineries)",
+            "No health impact context for AQI values beyond the standard color scale",
+        ],
+        "related_apis": [
+            {"name": "PurpleAir", "url": "https://api.purpleair.com/", "description": "Dense network of consumer-grade PM2.5 sensors. ~30,000 sensors vs EPA's ~1,300 stations. Much better spatial resolution, especially in residential areas.", "free": False},
+            {"name": "NOAA HMS Smoke Plumes", "url": "https://www.ospo.noaa.gov/products/land/hms.html", "description": "Satellite-detected wildfire smoke plumes with density estimates. GIS shapefiles updated multiple times daily during fire season.", "free": True},
+            {"name": "Open-Meteo Historical Weather", "url": "https://open-meteo.com/en/docs/historical-weather-api", "description": "Historical weather data including temperature inversions that trap pollution. Free tier with generous limits.", "free": True},
+            {"name": "EPA Toxics Release Inventory", "url": "https://www.epa.gov/toxics-release-inventory-tri-program", "description": "Annual reports of toxic chemical releases from industrial facilities. Good for identifying nearby pollution sources.", "free": True},
+        ],
         "data_sources": [
             {
                 "name": "EPA AQS API",
                 "url": "https://aqs.epa.gov/data/api/",
                 "provider": "US Environmental Protection Agency",
-                "coverage": "US nationwide, ~1,300 monitoring stations",
+                "coverage": "US nationwide, ~1,790 monitoring stations loaded",
                 "granularity": "Hourly readings per station",
                 "update_frequency": "Hourly",
                 "authentication": "Free (email address used as API key)",
-                "rate_limits": "~10 requests/minute",
+                "rate_limits": "~10 requests/minute; large states (CA, TX) timeout at 60s",
                 "history": "Back to 1990",
                 "key_fields": ["site_id", "aqi", "parameter (88101=PM2.5, 44201=Ozone)", "lat", "lng", "state", "county"],
-                "caveats": "Not all stations report all parameters. Some stations have gaps in historical data.",
+                "caveats": "Not all stations report all parameters. Large state queries timeout -- need bulk download approach. Currently only NY, FL, WA have PM2.5 data ingested.",
             },
             {
                 "name": "OpenWeatherMap Air Pollution API",
@@ -128,10 +144,10 @@ async def data_sources(request: Request):
                 "rate_limits": "1,000 calls/day on free tier",
                 "history": "Since November 2020",
                 "key_fields": ["aqi", "pm2_5", "pm10", "o3", "no2", "so2", "co"],
-                "caveats": "Free tier has limited daily calls. Global coverage but resolution varies by region.",
+                "caveats": "Free tier has limited daily calls. Listed as a data source but not actively used in the current MVP pipeline.",
             },
         ],
-        "data_freshness": "AQI data is stored in a local SQLite database with monthly aggregations. The app displays historical monthly averages per station, not real-time readings. Data must be ingested via a separate import process.",
+        "data_freshness": "AQI data is stored in a local SQLite database with monthly aggregations. The app displays historical monthly averages per station, not real-time readings. Data must be ingested via a separate import process. Bulk EPA CSV downloads are the recommended path forward for full US coverage.",
     })
 
 

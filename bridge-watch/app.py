@@ -68,6 +68,21 @@ async def data_sources(request: Request):
     return templates.TemplateResponse(request, "data-sources.html", {
         "app_name": "Bridge Watch",
         "app_description": "US bridge condition map powered by the National Bridge Inventory. Visualizes structural condition ratings, age, and traffic data for 600K+ bridges.",
+        "vision_assessment": "The NBI REST API now requires an authentication token, which blocks the core data source. The app currently shows 0 bridges. The vision needs to pivot to FHWA bulk CSV downloads or find an alternative endpoint. The visualization concept (condition-coded bridge markers with age and traffic data) is sound, but the data pipeline is broken.",
+        "killer_feature": "Bridge life clock -- for any bridge you cross regularly, show its full biography: when it was built, every inspection it's ever had, how its condition scores have trended over decades, and a statistical estimate of when it will likely need major rehabilitation or replacement based on deterioration curves for its structural type. Overlay with the daily traffic count to show the risk exposure.",
+        "data_gaps": [
+            "NBI REST API now requires auth token -- app shows 0 bridges (BLOCKED)",
+            "Need to pivot to FHWA bulk CSV downloads (annual snapshots available)",
+            "No historical inspection trend data in current implementation (only latest snapshot)",
+            "No bridge closure or weight restriction alerts",
+            "No correlation with seismic risk zones for earthquake-prone regions",
+            "No funding or rehabilitation project status data",
+        ],
+        "related_apis": [
+            {"name": "FHWA NBI CSV Downloads", "url": "https://www.fhwa.dot.gov/bridge/nbi/ascii.cfm", "description": "Annual bulk CSV downloads of the complete National Bridge Inventory. The fallback data source since the REST API now requires auth.", "free": True},
+            {"name": "FHWA HPMS", "url": "https://www.fhwa.dot.gov/policyinformation/hpms.cfm", "description": "Highway Performance Monitoring System. Road condition and traffic volume data that could enrich bridge context.", "free": True},
+            {"name": "USGS Earthquake Hazards", "url": "https://earthquake.usgs.gov/fdsnws/event/1/", "description": "Overlay seismic activity near bridges to assess earthquake vulnerability.", "free": True},
+        ],
         "data_sources": [
             {
                 "name": "National Bridge Inventory (NBI)",
@@ -76,14 +91,14 @@ async def data_sources(request: Request):
                 "coverage": "US nationwide, 600,000+ bridges",
                 "granularity": "Per bridge, with spatial query support",
                 "update_frequency": "Annually",
-                "authentication": "Free, no key required",
+                "authentication": "Now requires auth token (previously free)",
                 "rate_limits": "REST API with standard rate limiting",
                 "history": "Current inventory snapshot with year-built data",
                 "key_fields": ["structure_number", "condition_deck (0-9)", "condition_superstructure (0-9)", "condition_substructure (0-9)", "year_built", "adt (traffic count)", "lat", "lng"],
-                "caveats": "Condition ratings use a 0-9 scale (9=excellent, 0=failed). Some bridges may have incomplete data. Annual updates mean recently repaired bridges may still show old ratings.",
+                "caveats": "API now requires authentication -- currently blocked. Condition ratings use a 0-9 scale (9=excellent, 0=failed). Annual updates mean recently repaired bridges may still show old ratings.",
             },
         ],
-        "data_freshness": "Bridge data is fetched directly from the NBI REST API per state on each request. The underlying data is updated annually by state DOTs. Condition ratings reflect the most recent inspection cycle.",
+        "data_freshness": "Bridge data pipeline is currently blocked due to NBI REST API authentication requirement. The underlying data is updated annually by state DOTs. Pivot to FHWA bulk CSV downloads is needed to restore functionality.",
     })
 
 

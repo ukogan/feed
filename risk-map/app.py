@@ -111,6 +111,23 @@ async def data_sources(request: Request):
     return templates.TemplateResponse(request, "data-sources.html", {
         "app_name": "Risk Map",
         "app_description": "Combined earthquake and wildfire risk map for California. Overlays seismic activity, active fire perimeters, and fire weather alerts on a single map.",
+        "vision_assessment": "The USGS earthquake API is excellent -- 2,000+ quakes beautifully visualize California's fault lines. The multi-layer risk overlay concept works well. NIFC fire perimeters may be empty depending on season (tested outside fire season). The main gap is that the app shows current hazards but not historical risk patterns or a combined risk score for a specific location. It answers 'what is happening now' but not 'how dangerous is this address over time.'",
+        "killer_feature": "Address risk biography -- enter any California address and get a complete natural hazard history: every earthquake within 50 miles ranked by shaking intensity at that point (not just magnitude), every fire that burned within 10 miles, every flood zone it sits in, and a composite risk score compared to the state median. Show it as a timeline going back decades with a forward-looking probabilistic risk estimate.",
+        "data_gaps": [
+            "No historical fire data -- only shows current active fires",
+            "No ShakeMaps (ground motion intensity at a point, not just epicenter magnitude)",
+            "No combined risk score for a specific location",
+            "NIFC perimeters may be empty outside fire season",
+            "No flood zone data despite floods being a major California hazard",
+            "No historical weather patterns to assess long-term risk trends",
+        ],
+        "related_apis": [
+            {"name": "Cal Fire FRAP", "url": "https://frap.fire.ca.gov/", "description": "California fire perimeter history back to 1878. The historical fire data needed to assess long-term wildfire risk at any location.", "free": True},
+            {"name": "USGS Quaternary Faults", "url": "https://earthquake.usgs.gov/hazards/qfaults/", "description": "Mapped fault lines with slip rates and recurrence intervals. Shows where future earthquakes are most likely.", "free": True},
+            {"name": "FEMA Flood Zones (NFHL)", "url": "https://hazards.fema.gov/femaportal/wps/portal/NFHLWMS", "description": "National Flood Hazard Layer. Flood zone designations for every parcel in the US.", "free": True},
+            {"name": "Open-Meteo Historical Weather", "url": "https://open-meteo.com/en/docs/historical-weather-api", "description": "Historical temperature, wind, and precipitation data. Useful for fire weather pattern analysis.", "free": True},
+            {"name": "USGS ShakeMap", "url": "https://earthquake.usgs.gov/data/shakemap/", "description": "Ground motion and shaking intensity maps for significant earthquakes. Shows actual impact, not just magnitude.", "free": True},
+        ],
         "data_sources": [
             {
                 "name": "USGS Earthquake Hazards API",
@@ -136,7 +153,7 @@ async def data_sources(request: Request):
                 "rate_limits": "Standard ArcGIS rate limits",
                 "history": "Current active fires only",
                 "key_fields": ["fire_name", "acres", "containment (%)", "discovery_date", "geometry"],
-                "caveats": "Perimeter data is most actively updated during fire season (summer/fall). Small fires may not have mapped perimeters. Acreage figures are estimates.",
+                "caveats": "Perimeter data may be empty outside fire season. Small fires may not have mapped perimeters. Acreage figures are estimates.",
             },
             {
                 "name": "NWS Weather Alerts",
@@ -152,7 +169,7 @@ async def data_sources(request: Request):
                 "caveats": "App filters for fire weather watches and red flag warnings only. Alerts are transient -- they expire and are removed from the API.",
             },
         ],
-        "data_freshness": "Earthquake data and fire weather alerts are fetched in real-time on each request. Fire perimeters are updated frequently during active fire season. The risk summary endpoint aggregates 30-day earthquake activity, current active fires, and active fire weather alerts.",
+        "data_freshness": "Earthquake data and fire weather alerts are fetched in real-time on each request. Fire perimeters are updated frequently during active fire season but may return empty results outside fire season. The risk summary endpoint aggregates 30-day earthquake activity, current active fires, and active fire weather alerts.",
     })
 
 

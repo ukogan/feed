@@ -172,6 +172,22 @@ async def data_sources(request: Request):
     return templates.TemplateResponse(request, "data-sources.html", {
         "app_name": "Flight Explorer",
         "app_description": "Discover what aircraft are flying overhead right now. Look up tail numbers, track flights, and explore real-time air traffic.",
+        "vision_assessment": "Real-time tracking via ADSB.lol works perfectly -- the overhead detection is satisfying and immediate. The historical pipeline code is written but the archives are 3.4GB daily tarballs that haven't been downloaded yet, so historical features are non-functional. Seat count estimation is approximate (hardcoded lookup table covering 39 aircraft types). The fundamental limitation of ADS-B data is that you can't determine origin or destination -- you only see current position, heading, and altitude.",
+        "killer_feature": "Flight deja vu -- show that the exact same physical airplane (not just the same flight number) that flew over your house today also flew over it 3 weeks ago, and trace its entire journey in between. Every city it visited, every airport it touched down at, rendered as an animated globe trail. Requires historical archive ingestion but the hex code (ICAO address) makes individual aircraft tracking possible.",
+        "data_gaps": [
+            "Cannot determine origin or destination from ADS-B position data alone",
+            "Historical archive pipeline exists in code but 3.4GB/day tarballs haven't been downloaded",
+            "Seat capacity is approximate -- hardcoded lookup table covers only 39 aircraft types",
+            "No airline or flight number data (ADS-B gives callsign, which is often but not always the flight number)",
+            "Coverage depends on community receiver density -- gaps over oceans and remote areas",
+            "No noise level data for overhead flights",
+        ],
+        "related_apis": [
+            {"name": "OpenSky Network", "url": "https://opensky-network.org/apidoc/", "description": "30-day historical track data for any aircraft. Academic project with free tier. Could fill the historical gap without downloading terabytes of archives.", "free": True},
+            {"name": "FAA ATCSCC", "url": "https://www.fly.faa.gov/adv/adv_list.jsp", "description": "Air traffic control system command center advisories. Ground stops, delays, and reroutes in real-time.", "free": True},
+            {"name": "DOT Aircraft Noise Maps", "url": "https://www.bts.gov/topics/airlines-and-airports/", "description": "Noise contour maps around airports. Could overlay noise exposure data on overhead flights.", "free": True},
+            {"name": "ADS-B Exchange", "url": "https://www.adsbexchange.com/data/", "description": "Another community ADS-B network with historical data access. Paid API but unfiltered (includes military).", "free": False},
+        ],
         "data_sources": [
             {
                 "name": "ADSB.lol API",
@@ -213,7 +229,7 @@ async def data_sources(request: Request):
                 "caveats": "Only covers US-registered aircraft. Owner information may be a trust or LLC rather than the actual operator.",
             },
         ],
-        "data_freshness": "Aircraft positions are fetched in real-time from ADSB.lol on each request. The app queries by geographic area and matches aircraft overhead based on position and heading. Seat capacity estimates use a hardcoded lookup table by aircraft type code.",
+        "data_freshness": "Aircraft positions are fetched in real-time from ADSB.lol on each request. The app queries by geographic area and matches aircraft overhead based on position and heading. Seat capacity estimates use a hardcoded lookup table covering 39 aircraft type codes.",
     })
 
 

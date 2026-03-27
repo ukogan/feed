@@ -113,9 +113,83 @@ async def get_cities():
 
 @app.get("/data")
 async def data_sources(request: Request):
+    normalization_html = """
+<p>Each city's Socrata dataset uses different field names, date semantics, and type taxonomies. The normalization layer maps these into a common schema, but the mapping is lossy in several dimensions:</p>
+<table>
+    <thead>
+        <tr>
+            <th>Dimension</th>
+            <th>NYC</th>
+            <th>SF</th>
+            <th>Chicago</th>
+            <th>LA</th>
+            <th>Seattle</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Date field</td>
+            <td>pre__filing_date</td>
+            <td>filed_date</td>
+            <td>issue_date</td>
+            <td>issue_date</td>
+            <td>issue_date</td>
+        </tr>
+        <tr>
+            <td>Date meaning</td>
+            <td>Filing (application)</td>
+            <td>Filing</td>
+            <td>Issuance (approval)</td>
+            <td>Issuance</td>
+            <td>Issuance</td>
+        </tr>
+        <tr>
+            <td>Type field</td>
+            <td>job_type (codes)</td>
+            <td>permit_type_definition (prose)</td>
+            <td>permit_type (long)</td>
+            <td>permit_type (short)</td>
+            <td>permitclass (use category)</td>
+        </tr>
+        <tr>
+            <td>Location</td>
+            <td>borough (5)</td>
+            <td>neighborhood (~40)</td>
+            <td>community_area (77)</td>
+            <td>community_plan_area</td>
+            <td>neighborhood</td>
+        </tr>
+        <tr>
+            <td>Value field</td>
+            <td>initial_cost</td>
+            <td>estimated_cost</td>
+            <td>reported_cost</td>
+            <td>valuation</td>
+            <td>estprojectcost</td>
+        </tr>
+    </tbody>
+</table>
+<p class="norm-warn">Seattle's type mapping is particularly problematic: it maps by use class rather than action type. A residential demolition gets classified as "Renovation" because the use class is residential. The "Other" catch-all bucket contains 30-50% of records across cities. NYC and SF use filing dates (when the application was submitted) while Chicago, LA, and Seattle use issuance dates (when the permit was approved) -- these represent different moments in the permit lifecycle and are not directly comparable.</p>
+"""
     return templates.TemplateResponse(request, "data-sources.html", {
         "app_name": "Permit Pulse",
         "app_description": "Multi-city building permit aggregator as a real estate leading indicator. Tracks permit activity across NYC, San Francisco, Chicago, LA, and Seattle.",
+        "vision_assessment": "The Socrata APIs work and the multi-city normalization produces usable results, but the normalization is very lossy. Cross-city comparison is misleading: NYC filing dates vs Chicago issuance dates measure different lifecycle moments, the 'Other' category absorbs 30-50% of records, and value fields measure different things across cities. The app works as a per-city activity tracker but the cross-city comparison story is weaker than hoped.",
+        "killer_feature": "Neighborhood gentrification radar -- combine permit velocity (new construction, demolitions, major renovations) with Census median income data and Zillow/Redfin price trends to identify neighborhoods in the early stages of rapid change. Show a 2-year rolling animation of permit activity overlaid on property value changes. The permits are the leading indicator; prices are the lagging confirmation.",
+        "data_gaps": [
+            "Cross-city comparison is misleading due to different date semantics (filing vs issuance)",
+            "Seattle type mapping is wrong -- maps by use class, not action type (residential demo = 'Renovation')",
+            "The 'Other' catch-all bucket contains 30-50% of records across all cities",
+            "Value fields measure different things (initial_cost vs valuation vs estimated_cost)",
+            "No property value or demographic data to provide economic context",
+            "No geocoded locations for some cities (can't map individual permits)",
+        ],
+        "related_apis": [
+            {"name": "Census Building Permits Survey", "url": "https://www.census.gov/construction/bps/", "description": "National building permits data aggregated by metro area. Good for macro trends but less granular than city-level Socrata data.", "free": True},
+            {"name": "Zillow Research Data", "url": "https://www.zillow.com/research/data/", "description": "Home value indices by neighborhood. Could overlay property value trends on permit activity to show leading/lagging indicator relationships.", "free": True},
+            {"name": "Census ACS", "url": "https://www.census.gov/programs-surveys/acs", "description": "American Community Survey demographic data by census tract. Income, housing, and population data for neighborhood context.", "free": True},
+        ],
+        "normalization_notes": normalization_html,
         "data_sources": [
             {
                 "name": "Socrata Open Data (NYC, SF, Chicago, LA, Seattle)",
@@ -128,10 +202,10 @@ async def data_sources(request: Request):
                 "rate_limits": "Varies by city; throttled without app token",
                 "history": "Years of historical data (varies by city)",
                 "key_fields": ["permit_number", "permit_type", "status", "filing_date", "address", "description", "estimated_cost"],
-                "caveats": "Each city uses different field names and date formats. Data completeness varies significantly between cities. Some cities may lag in updating their open data portals.",
+                "caveats": "Each city uses different field names, date semantics, and type taxonomies. See Normalization Notes below for details.",
             },
         ],
-        "data_freshness": "Permit data is fetched directly from each city's Socrata API on each request. The app normalizes different city schemas into a common format. Analytics (monthly trends, hot zones, type breakdowns) are computed on the fly from the fetched records.",
+        "data_freshness": "Permit data is fetched directly from each city's Socrata API on each request. The app normalizes different city schemas into a common format (with known lossy mappings). Analytics (monthly trends, hot zones, type breakdowns) are computed on the fly from the fetched records.",
     })
 
 

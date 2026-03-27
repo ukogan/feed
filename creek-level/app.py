@@ -82,12 +82,28 @@ async def data_sources(request: Request):
     return templates.TemplateResponse(request, "data-sources.html", {
         "app_name": "Creek Level",
         "app_description": "Real-time river and creek gauge monitor using USGS Water Services data. Tracks gauge height and discharge at thousands of stream gauges nationwide.",
+        "vision_assessment": "After fixing the wrong endpoint issue, the USGS Instantaneous Values (IV) endpoint now returns 541 CA gauges with 15-minute updates. The data quality is excellent -- USGS is one of the best-maintained federal APIs. The main gap is context: raw gauge height numbers are meaningless without flood stage thresholds, and there's no forecast integration to answer the question users actually care about: 'will this creek flood?'",
+        "killer_feature": "Flood memory timeline -- for any gauge, show every flood event in its recorded history as a timeline. How high did it get? How fast did it rise? What was the weather that caused it? Then overlay the current NWS river forecast to show whether the next 7 days look like any of those historical flood patterns. Turn abstract gauge numbers into 'this creek last looked like this on [date], and here is what happened next.'",
+        "data_gaps": [
+            "No flood stage thresholds shown -- raw gauge height is meaningless without 'action stage' and 'flood stage' context",
+            "No river forecast data to predict what happens next",
+            "No precipitation data overlay to correlate rainfall with gauge response",
+            "Currently limited to California (541 gauges) -- could expand nationwide",
+            "No alerting or threshold notification system",
+            "No watershed context (which gauges are upstream/downstream of each other)",
+        ],
+        "related_apis": [
+            {"name": "NWS River Forecasts", "url": "https://water.weather.gov/ahps/", "description": "National Weather Service river stage forecasts with flood thresholds. The missing piece for 'will it flood?' predictions.", "free": True},
+            {"name": "NOAA Precipitation Forecasts", "url": "https://www.weather.gov/documentation/services-web-api", "description": "Quantitative precipitation forecasts. Correlate expected rainfall with gauge response times.", "free": True},
+            {"name": "USGS Flood Event Viewer", "url": "https://stn.wim.usgs.gov/FEV/", "description": "Historical flood event data with high-water marks and peak streamflow records.", "free": True},
+            {"name": "USGS NLDI", "url": "https://waterdata.usgs.gov/blog/nldi-intro/", "description": "Network-Linked Data Index. Navigate upstream/downstream between gauges to understand watershed relationships.", "free": True},
+        ],
         "data_sources": [
             {
-                "name": "USGS Water Services",
+                "name": "USGS Water Services (IV endpoint)",
                 "url": "https://waterservices.usgs.gov/",
                 "provider": "US Geological Survey",
-                "coverage": "US nationwide, thousands of stream gauges",
+                "coverage": "US nationwide -- currently showing 541 CA gauges",
                 "granularity": "15-minute readings per gauge",
                 "update_frequency": "Every 15 minutes",
                 "authentication": "Free, no key required",
@@ -97,7 +113,7 @@ async def data_sources(request: Request):
                 "caveats": "Not all gauges report all parameters. Some gauges may go offline during extreme weather events. Provisional data is subject to revision.",
             },
         ],
-        "data_freshness": "Gauge readings are fetched directly from USGS on each request. Data is near-real-time with 15-minute update intervals. Historical queries use ISO 8601 duration periods (e.g., P1D for 1 day, P7D for 7 days).",
+        "data_freshness": "Gauge readings are fetched directly from USGS Instantaneous Values endpoint on each request. Data is near-real-time with 15-minute update intervals. Historical queries use ISO 8601 duration periods (e.g., P1D for 1 day, P7D for 7 days).",
     })
 
 

@@ -144,6 +144,22 @@ async def data_sources(request: Request):
     return templates.TemplateResponse(request, "data-sources.html", {
         "app_name": "Court Flow",
         "app_description": "Trending topics in federal litigation. Search opinions, track docket activity, and see which legal topics are generating the most court activity.",
+        "vision_assessment": "The CourtListener API works after fixing a trailing slash issue in the endpoint URLs. The free tier is rate-limited, which constrains how many trending topics can be queried simultaneously. The current trending feature searches 10 hardcoded legal terms -- it's a static list, not true topic extraction from recent filings. Citation network analysis (which cases cite which) would be the real differentiator but requires deeper API integration.",
+        "killer_feature": "Legal precedent chain reaction -- when a major ruling drops, automatically trace every case it cites and every case that previously cited those cases, then predict which pending cases in the same circuit will be affected. Visualize it as a citation network graph where you can see influence ripple outward from a landmark decision in real-time.",
+        "data_gaps": [
+            "No true trending topic extraction -- uses 10 hardcoded search terms",
+            "No citation network analysis (which opinions cite which)",
+            "Rate limited on free tier -- constrains concurrent queries",
+            "No state court coverage in current implementation",
+            "No oral argument transcripts or audio",
+            "No judge-level analytics (how does a specific judge rule on X topic)",
+        ],
+        "related_apis": [
+            {"name": "RECAP Archive", "url": "https://www.courtlistener.com/recap/", "description": "Free archive of PACER documents. Millions of federal court documents without per-page fees.", "free": True},
+            {"name": "Federal Judicial Center", "url": "https://www.fjc.gov/research/idb", "description": "Integrated Database of federal court case statistics. Longitudinal data on case types, durations, and outcomes.", "free": True},
+            {"name": "PACER", "url": "https://pacer.uscourts.gov/", "description": "Official federal court electronic records system. Comprehensive but charges per page viewed.", "free": False},
+            {"name": "Supreme Court API", "url": "https://api.oyez.org/", "description": "Oyez project API with oral argument audio, transcripts, and case information for SCOTUS.", "free": True},
+        ],
         "data_sources": [
             {
                 "name": "CourtListener API v4",
@@ -153,13 +169,13 @@ async def data_sources(request: Request):
                 "granularity": "Per opinion, per docket, per court",
                 "update_frequency": "Near-daily (as opinions are published)",
                 "authentication": "Free, no key required for basic access",
-                "rate_limits": "Rate limited (exact limits not published)",
+                "rate_limits": "Rate limited on free tier (exact limits not published)",
                 "history": "Historical opinions dating back decades",
                 "key_fields": ["case_name", "date_filed", "court", "citation", "opinion_text", "docket_number", "judges"],
-                "caveats": "Rate limits may throttle heavy usage. Not all opinions include full text. Coverage is strongest for federal courts; state court coverage varies.",
+                "caveats": "Rate limits may throttle heavy usage. Not all opinions include full text. Coverage is strongest for federal courts; state court coverage varies. Trailing slash required on API endpoints.",
             },
         ],
-        "data_freshness": "Opinions and dockets are fetched directly from CourtListener on each request. Trending topics are computed by searching multiple legal terms and comparing result counts. No local caching is applied.",
+        "data_freshness": "Opinions and dockets are fetched directly from CourtListener on each request. Trending topics are computed by searching 10 hardcoded legal terms and comparing result counts. No local caching is applied.",
     })
 
 

@@ -146,6 +146,22 @@ async def data_sources(request: Request):
     return templates.TemplateResponse(request, "data-sources.html", {
         "app_name": "Energy Grid",
         "app_description": "Real-time US energy generation mix with carbon intensity and smart timing advice. Covers all major ISOs including CAISO, ERCOT, PJM, MISO, NYISO, ISONE, and SPP.",
+        "vision_assessment": "The EIA API works well and the stacked area chart renders beautifully with real CAISO data. The smart timing advice feature is functional and genuinely useful. The 4-6 hour data lag limits the 'real-time' claim but the historical pattern analysis compensates. The biggest gap is the absence of electricity price data, which would transform the timing advisor from 'when is greenest' to 'when is greenest AND cheapest.'",
+        "killer_feature": "Personal carbon accountant -- connect your smart meter data (Green Button standard) and see exactly how dirty or clean YOUR specific electricity was, hour by hour, based on the actual generation mix at the time you consumed it. Show the dollar cost of switching your EV charging or laundry to the greenest window, with a year-over-year carbon savings tracker.",
+        "data_gaps": [
+            "No electricity price data -- the timing advisor can't factor in cost",
+            "No plant-level generation data (only ISO-level aggregates)",
+            "4-6 hour data lag means 'real-time' is misleading during rapid grid changes",
+            "Carbon intensity is estimated from fuel mix, not measured directly",
+            "No demand-side data (only generation/supply side)",
+            "No forecast of upcoming generation mix for planning ahead",
+        ],
+        "related_apis": [
+            {"name": "CAISO OASIS", "url": "http://oasis.caiso.com/", "description": "Real-time and day-ahead electricity prices for California ISO. Locational marginal pricing at node level.", "free": True},
+            {"name": "WattTime", "url": "https://www.watttime.org/api-documentation/", "description": "Real-time and forecast marginal carbon intensity by grid region. Purpose-built for 'when to use electricity' decisions.", "free": False},
+            {"name": "Green Button (OpenEI)", "url": "https://www.energy.gov/data/green-button", "description": "Standard format for utility smart meter data. Enables personal consumption analysis against grid mix.", "free": True},
+            {"name": "Open-Meteo Weather", "url": "https://open-meteo.com/", "description": "Solar irradiance and wind speed forecasts to predict renewable generation capacity.", "free": True},
+        ],
         "data_sources": [
             {
                 "name": "EIA API v2",

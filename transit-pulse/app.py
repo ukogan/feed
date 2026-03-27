@@ -104,6 +104,22 @@ async def data_sources(request: Request):
     return templates.TemplateResponse(request, "data-sources.html", {
         "app_name": "Transit Pulse",
         "app_description": "Transit reliability scores from real-time BART data. Monitors station departures across the Bay Area Rapid Transit system and computes reliability metrics.",
+        "vision_assessment": "The BART API works with its public key and returns departure estimates for all stations. The reliability score computation is functional. The fundamental limitation is that each page load captures a single point-in-time snapshot -- there's no accumulated historical reliability data, so you can't answer 'is the Pittsburg line usually late at 5pm?' The departure estimates also don't tell you where trains actually are between stations.",
+        "killer_feature": "BART reliability report card -- continuously poll the API (every 2 minutes) and accumulate a database of actual vs predicted departure times. After a month of data, generate a reliability grade for each line, each station, and each time-of-day window. Show commuters exactly which trains are consistently late and by how much, with a 'leave by' recommendation that accounts for real observed delays, not just the schedule.",
+        "data_gaps": [
+            "Single point-in-time snapshot only -- no accumulated reliability history",
+            "Can't track actual train positions between stations (only departure estimates)",
+            "No comparison between predicted and actual departure times",
+            "No service alert or disruption history",
+            "No ridership or crowding data",
+            "Limited to BART -- no integration with Muni, Caltrain, or AC Transit",
+        ],
+        "related_apis": [
+            {"name": "BART GTFS-Realtime", "url": "https://www.bart.gov/schedules/developers/gtfs-realtime", "description": "GTFS-RT feed that may include VehiclePosition messages (actual train locations), not just departure predictions.", "free": True},
+            {"name": "511.org Transit API", "url": "https://511.org/open-data/transit", "description": "Regional transit data for the entire Bay Area including Muni, Caltrain, AC Transit, and BART.", "free": True},
+            {"name": "MTC Open Data", "url": "https://opendata.mtc.ca.gov/", "description": "Metropolitan Transportation Commission data including regional ridership statistics and performance metrics.", "free": True},
+            {"name": "BART Ridership Data", "url": "https://www.bart.gov/about/reports/ridership", "description": "Historical ridership data by station and time period. Could overlay crowding patterns on reliability scores.", "free": True},
+        ],
         "data_sources": [
             {
                 "name": "BART API",
@@ -116,10 +132,10 @@ async def data_sources(request: Request):
                 "rate_limits": "No published limits",
                 "history": "Real-time only (no historical departures)",
                 "key_fields": ["station_abbr", "station_name", "destination", "minutes", "platform", "direction", "delay"],
-                "caveats": "Departure estimates are predictions, not guaranteed times. During service disruptions, data may be incomplete or delayed. The public API key is shared across all users.",
+                "caveats": "Departure estimates are predictions, not guaranteed times. During service disruptions, data may be incomplete or delayed. The public API key is shared across all users. No accumulated historical data.",
             },
         ],
-        "data_freshness": "Departure estimates are fetched in real-time from the BART API on each request. Reliability scores are computed from a snapshot of current departures across all stations, representing system-wide health at that moment. No historical tracking is performed.",
+        "data_freshness": "Departure estimates are fetched in real-time from the BART API on each request. Reliability scores are computed from a single point-in-time snapshot of current departures across all stations. No historical tracking or trend analysis is performed.",
     })
 
 

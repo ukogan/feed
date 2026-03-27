@@ -117,6 +117,22 @@ async def data_sources(request: Request):
     return templates.TemplateResponse(request, "data-sources.html", {
         "app_name": "Legis Track",
         "app_description": "Congress member lookup with bills, voting records, and campaign finance data. Search members, browse recent legislation, and follow the money.",
+        "vision_assessment": "Congress.gov API works well for bills and members. FEC campaign finance integration works but searches by last name, which produces fuzzy matches. Stock trades feature was removed because there's no free API for congressional stock disclosures. The member profile view is functional but lacks roll call vote data, which would show how members actually vote rather than just what they sponsor.",
+        "killer_feature": "Money-to-vote pipeline -- for any bill, show the complete influence chain: which industries lobbied for or against it (Senate LDA data), how much money those industries gave to each voting member (FEC data), and how each member voted (roll call data). Render it as a Sankey diagram flowing from industry dollars through members to yes/no votes.",
+        "data_gaps": [
+            "FEC name matching is fuzzy -- searches by last name, may return wrong candidates for common names",
+            "No roll call vote data implemented yet (only bill sponsorship)",
+            "Stock trade disclosures removed -- no free API available",
+            "No lobbying data to connect industry money to legislative outcomes",
+            "No committee assignment data for members",
+            "No bill text or summary in the current implementation",
+        ],
+        "related_apis": [
+            {"name": "Senate LDA (Lobbying Disclosure)", "url": "https://lda.senate.gov/api/", "description": "Lobbying disclosure reports filed with the Senate. Shows which firms lobby on which bills and for how much.", "free": True},
+            {"name": "GovInfo API", "url": "https://api.govinfo.gov/", "description": "Full text of bills, hearing transcripts, committee reports, and the Congressional Record.", "free": True},
+            {"name": "Federal Register API", "url": "https://www.federalregister.gov/developers/api/v1", "description": "Regulations and executive orders. Connect legislative intent to regulatory implementation.", "free": True},
+            {"name": "ProPublica Congress API", "url": "https://projects.propublica.org/api-docs/congress-api/", "description": "Roll call votes, member comparisons, and committee data. More structured than raw Congress.gov data.", "free": True},
+        ],
         "data_sources": [
             {
                 "name": "Congress.gov API v3",
@@ -142,10 +158,10 @@ async def data_sources(request: Request):
                 "rate_limits": "1,000 requests/hour",
                 "history": "Covers multiple federal election cycles",
                 "key_fields": ["candidate_id", "name", "party", "total_receipts", "total_disbursements", "individual_contributions", "pac_contributions"],
-                "caveats": "Campaign finance data lags real-time by days to weeks depending on filing schedules. Name matching between Congress.gov and FEC may not always be exact.",
+                "caveats": "Campaign finance data lags real-time by days to weeks. Name matching between Congress.gov and FEC is fuzzy (by last name) and may return incorrect candidates.",
             },
         ],
-        "data_freshness": "Data is fetched directly from Congress.gov and FEC APIs on each request. No caching is applied. The timeline view aggregates recent legislative actions. Campaign finance lookups match by candidate name, which may produce imprecise results for common names.",
+        "data_freshness": "Data is fetched directly from Congress.gov and FEC APIs on each request. No caching is applied. The timeline view aggregates recent legislative actions. Campaign finance lookups match by candidate last name, which may produce imprecise results for common names.",
     })
 
 
