@@ -111,5 +111,29 @@ async def get_cities():
     return {k: v["name"] for k, v in CITIES.items()}
 
 
+@app.get("/data")
+async def data_sources(request: Request):
+    return templates.TemplateResponse(request, "data-sources.html", {
+        "app_name": "Permit Pulse",
+        "app_description": "Multi-city building permit aggregator as a real estate leading indicator. Tracks permit activity across NYC, San Francisco, Chicago, LA, and Seattle.",
+        "data_sources": [
+            {
+                "name": "Socrata Open Data (NYC, SF, Chicago, LA, Seattle)",
+                "url": "https://dev.socrata.com/",
+                "provider": "Individual city governments via Socrata Open Data platform",
+                "coverage": "NYC, San Francisco, Chicago, Los Angeles, Seattle",
+                "granularity": "Per permit record",
+                "update_frequency": "Varies by city (typically daily to weekly)",
+                "authentication": "Free, no key required (app token optional for higher limits)",
+                "rate_limits": "Varies by city; throttled without app token",
+                "history": "Years of historical data (varies by city)",
+                "key_fields": ["permit_number", "permit_type", "status", "filing_date", "address", "description", "estimated_cost"],
+                "caveats": "Each city uses different field names and date formats. Data completeness varies significantly between cities. Some cities may lag in updating their open data portals.",
+            },
+        ],
+        "data_freshness": "Permit data is fetched directly from each city's Socrata API on each request. The app normalizes different city schemas into a common format. Analytics (monthly trends, hot zones, type breakdowns) are computed on the fly from the fetched records.",
+    })
+
+
 if __name__ == "__main__":
     run_app(app, default_port=8013)

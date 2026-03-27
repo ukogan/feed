@@ -98,5 +98,42 @@ async def get_available_years():
         return []
 
 
+@app.get("/data")
+async def data_sources(request: Request):
+    return templates.TemplateResponse(request, "data-sources.html", {
+        "app_name": "AQI Map",
+        "app_description": "Historical air quality heatmap with animated time controls. Visualizes PM2.5 and Ozone readings from EPA monitoring stations across the US.",
+        "data_sources": [
+            {
+                "name": "EPA AQS API",
+                "url": "https://aqs.epa.gov/data/api/",
+                "provider": "US Environmental Protection Agency",
+                "coverage": "US nationwide, ~1,300 monitoring stations",
+                "granularity": "Hourly readings per station",
+                "update_frequency": "Hourly",
+                "authentication": "Free (email address used as API key)",
+                "rate_limits": "~10 requests/minute",
+                "history": "Back to 1990",
+                "key_fields": ["site_id", "aqi", "parameter (88101=PM2.5, 44201=Ozone)", "lat", "lng", "state", "county"],
+                "caveats": "Not all stations report all parameters. Some stations have gaps in historical data.",
+            },
+            {
+                "name": "OpenWeatherMap Air Pollution API",
+                "url": "https://api.openweathermap.org/",
+                "provider": "OpenWeatherMap",
+                "coverage": "Global coverage",
+                "granularity": "Hourly per coordinate",
+                "update_frequency": "Hourly",
+                "authentication": "API key required (free tier available)",
+                "rate_limits": "1,000 calls/day on free tier",
+                "history": "Since November 2020",
+                "key_fields": ["aqi", "pm2_5", "pm10", "o3", "no2", "so2", "co"],
+                "caveats": "Free tier has limited daily calls. Global coverage but resolution varies by region.",
+            },
+        ],
+        "data_freshness": "AQI data is stored in a local SQLite database with monthly aggregations. The app displays historical monthly averages per station, not real-time readings. Data must be ingested via a separate import process.",
+    })
+
+
 if __name__ == "__main__":
     run_app(app, default_port=8000)

@@ -96,5 +96,55 @@ async def api_cloud_grid(
     return {"grid": grid}
 
 
+@app.get("/data")
+async def data_sources(request: Request):
+    return templates.TemplateResponse(request, "data-sources.html", {
+        "app_name": "Dark Sky Finder",
+        "app_description": "Find the best stargazing locations near you. Combines dark sky locations, cloud cover forecasts, and moon phase to recommend optimal viewing conditions.",
+        "data_sources": [
+            {
+                "name": "Open-Meteo Weather API",
+                "url": "https://api.open-meteo.com/",
+                "provider": "Open-Meteo",
+                "coverage": "Global",
+                "granularity": "Hourly forecast per coordinate",
+                "update_frequency": "Hourly forecast updates",
+                "authentication": "Free, no key required",
+                "rate_limits": "10,000 calls/day",
+                "history": "Forecast data only (not historical)",
+                "key_fields": ["cloud_cover (%)", "cloud_cover_low", "cloud_cover_mid", "cloud_cover_high", "temperature", "humidity"],
+                "caveats": "Cloud cover forecasts decrease in accuracy beyond 48 hours. Resolution varies by region.",
+            },
+            {
+                "name": "IDA Dark Sky Places",
+                "url": "",
+                "provider": "International Dark-Sky Association (hardcoded dataset)",
+                "coverage": "~50 certified dark sky locations worldwide",
+                "granularity": "Per location with Bortle class rating",
+                "update_frequency": "Static (updated manually in source code)",
+                "authentication": "N/A (embedded data)",
+                "rate_limits": "N/A",
+                "history": "Current certified locations",
+                "key_fields": ["name", "lat", "lng", "bortle_class", "designation"],
+                "caveats": "List may not include the most recently certified sites. Bortle class ratings are estimates and vary with atmospheric conditions.",
+            },
+            {
+                "name": "Moon Phase (computed)",
+                "url": "",
+                "provider": "Client-side computation",
+                "coverage": "Global (astronomical calculation)",
+                "granularity": "Daily",
+                "update_frequency": "Computed on each page load",
+                "authentication": "N/A",
+                "rate_limits": "N/A",
+                "history": "Any date (algorithmic)",
+                "key_fields": ["phase", "illumination (%)", "age (days)"],
+                "caveats": "Computed from a known new moon reference date. Accurate to within a few hours for illumination percentage.",
+            },
+        ],
+        "data_freshness": "Cloud cover forecasts are fetched in real-time from Open-Meteo. Dark sky locations are a static embedded dataset. Moon phase is computed client-side from astronomical algorithms, requiring no API call.",
+    })
+
+
 if __name__ == "__main__":
     run_app(app, default_port=8012)

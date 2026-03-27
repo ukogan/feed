@@ -112,5 +112,42 @@ async def get_contributions(name: str = Query("", description="Candidate name"))
     return {"contributions": data, "count": len(data)}
 
 
+@app.get("/data")
+async def data_sources(request: Request):
+    return templates.TemplateResponse(request, "data-sources.html", {
+        "app_name": "Legis Track",
+        "app_description": "Congress member lookup with bills, voting records, and campaign finance data. Search members, browse recent legislation, and follow the money.",
+        "data_sources": [
+            {
+                "name": "Congress.gov API v3",
+                "url": "https://api.congress.gov/v3/",
+                "provider": "Library of Congress",
+                "coverage": "US Congress -- all sessions, both chambers",
+                "granularity": "Per bill, per member, per vote",
+                "update_frequency": "Near-daily during sessions",
+                "authentication": "Free API key required",
+                "rate_limits": "Rate limited (varies by endpoint)",
+                "history": "All sessions of Congress",
+                "key_fields": ["bioguideId", "bill_number", "bill_type", "title", "sponsor", "cosponsors", "actions", "status"],
+                "caveats": "API can be slow during peak legislative periods. Member search is limited to the first page of results. Some bill text may not be immediately available.",
+            },
+            {
+                "name": "FEC API v1",
+                "url": "https://api.open.fec.gov/v1/",
+                "provider": "Federal Election Commission",
+                "coverage": "Federal elections (President, Senate, House)",
+                "granularity": "Per candidate, per committee, per contribution",
+                "update_frequency": "Varies (filings are periodic)",
+                "authentication": "Free API key required",
+                "rate_limits": "1,000 requests/hour",
+                "history": "Covers multiple federal election cycles",
+                "key_fields": ["candidate_id", "name", "party", "total_receipts", "total_disbursements", "individual_contributions", "pac_contributions"],
+                "caveats": "Campaign finance data lags real-time by days to weeks depending on filing schedules. Name matching between Congress.gov and FEC may not always be exact.",
+            },
+        ],
+        "data_freshness": "Data is fetched directly from Congress.gov and FEC APIs on each request. No caching is applied. The timeline view aggregates recent legislative actions. Campaign finance lookups match by candidate name, which may produce imprecise results for common names.",
+    })
+
+
 if __name__ == "__main__":
     run_app(app, default_port=8014)

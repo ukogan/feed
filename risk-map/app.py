@@ -106,5 +106,55 @@ async def get_risk_summary():
     }
 
 
+@app.get("/data")
+async def data_sources(request: Request):
+    return templates.TemplateResponse(request, "data-sources.html", {
+        "app_name": "Risk Map",
+        "app_description": "Combined earthquake and wildfire risk map for California. Overlays seismic activity, active fire perimeters, and fire weather alerts on a single map.",
+        "data_sources": [
+            {
+                "name": "USGS Earthquake Hazards API",
+                "url": "https://earthquake.usgs.gov/fdsnws/event/1/",
+                "provider": "US Geological Survey",
+                "coverage": "Global (app focuses on California)",
+                "granularity": "Per earthquake event",
+                "update_frequency": "Real-time (within minutes of detection)",
+                "authentication": "Free, no key required",
+                "rate_limits": "No published limits",
+                "history": "Configurable date range and magnitude filter",
+                "key_fields": ["magnitude", "depth", "lat", "lng", "place", "time", "type", "status"],
+                "caveats": "Small earthquakes (< M2) may not be detected in areas with sparse seismometer coverage. Magnitude and location may be revised in the hours after an event.",
+            },
+            {
+                "name": "NIFC Wildland Fire Perimeters",
+                "url": "https://services3.arcgis.com/",
+                "provider": "National Interagency Fire Center (via ArcGIS)",
+                "coverage": "US nationwide active fire perimeters",
+                "granularity": "Per fire perimeter (polygon geometry)",
+                "update_frequency": "Every ~5 minutes during fire season",
+                "authentication": "Free, no key required",
+                "rate_limits": "Standard ArcGIS rate limits",
+                "history": "Current active fires only",
+                "key_fields": ["fire_name", "acres", "containment (%)", "discovery_date", "geometry"],
+                "caveats": "Perimeter data is most actively updated during fire season (summer/fall). Small fires may not have mapped perimeters. Acreage figures are estimates.",
+            },
+            {
+                "name": "NWS Weather Alerts",
+                "url": "https://api.weather.gov/alerts/",
+                "provider": "National Weather Service",
+                "coverage": "US nationwide",
+                "granularity": "Per alert zone",
+                "update_frequency": "Real-time (as alerts are issued/updated)",
+                "authentication": "Free, no key required",
+                "rate_limits": "No published limits (User-Agent header required)",
+                "history": "Active alerts only",
+                "key_fields": ["event", "severity", "headline", "description", "area", "onset", "expires"],
+                "caveats": "App filters for fire weather watches and red flag warnings only. Alerts are transient -- they expire and are removed from the API.",
+            },
+        ],
+        "data_freshness": "Earthquake data and fire weather alerts are fetched in real-time on each request. Fire perimeters are updated frequently during active fire season. The risk summary endpoint aggregates 30-day earthquake activity, current active fires, and active fire weather alerts.",
+    })
+
+
 if __name__ == "__main__":
     run_app(app, default_port=8016)

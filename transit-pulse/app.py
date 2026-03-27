@@ -99,5 +99,29 @@ async def get_dashboard():
     }
 
 
+@app.get("/data")
+async def data_sources(request: Request):
+    return templates.TemplateResponse(request, "data-sources.html", {
+        "app_name": "Transit Pulse",
+        "app_description": "Transit reliability scores from real-time BART data. Monitors station departures across the Bay Area Rapid Transit system and computes reliability metrics.",
+        "data_sources": [
+            {
+                "name": "BART API",
+                "url": "https://api.bart.gov/api/",
+                "provider": "Bay Area Rapid Transit",
+                "coverage": "BART system (San Francisco Bay Area)",
+                "granularity": "Per station, per departure estimate",
+                "update_frequency": "Real-time (live departure estimates)",
+                "authentication": "Free public API key (MW9S-E7SL-26DU-VV8V)",
+                "rate_limits": "No published limits",
+                "history": "Real-time only (no historical departures)",
+                "key_fields": ["station_abbr", "station_name", "destination", "minutes", "platform", "direction", "delay"],
+                "caveats": "Departure estimates are predictions, not guaranteed times. During service disruptions, data may be incomplete or delayed. The public API key is shared across all users.",
+            },
+        ],
+        "data_freshness": "Departure estimates are fetched in real-time from the BART API on each request. Reliability scores are computed from a snapshot of current departures across all stations, representing system-wide health at that moment. No historical tracking is performed.",
+    })
+
+
 if __name__ == "__main__":
     run_app(app, default_port=8017)

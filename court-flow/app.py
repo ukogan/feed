@@ -139,5 +139,29 @@ async def api_trending(
     return {"trending": topic_counts}
 
 
+@app.get("/data")
+async def data_sources(request: Request):
+    return templates.TemplateResponse(request, "data-sources.html", {
+        "app_name": "Court Flow",
+        "app_description": "Trending topics in federal litigation. Search opinions, track docket activity, and see which legal topics are generating the most court activity.",
+        "data_sources": [
+            {
+                "name": "CourtListener API v4",
+                "url": "https://www.courtlistener.com/api/rest/v4/",
+                "provider": "Free Law Project",
+                "coverage": "Federal courts -- SCOTUS, Circuit courts, District courts",
+                "granularity": "Per opinion, per docket, per court",
+                "update_frequency": "Near-daily (as opinions are published)",
+                "authentication": "Free, no key required for basic access",
+                "rate_limits": "Rate limited (exact limits not published)",
+                "history": "Historical opinions dating back decades",
+                "key_fields": ["case_name", "date_filed", "court", "citation", "opinion_text", "docket_number", "judges"],
+                "caveats": "Rate limits may throttle heavy usage. Not all opinions include full text. Coverage is strongest for federal courts; state court coverage varies.",
+            },
+        ],
+        "data_freshness": "Opinions and dockets are fetched directly from CourtListener on each request. Trending topics are computed by searching multiple legal terms and comparing result counts. No local caching is applied.",
+    })
+
+
 if __name__ == "__main__":
     run_app(app, default_port=8015)

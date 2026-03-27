@@ -138,5 +138,55 @@ async def get_area(
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
+@app.get("/data")
+async def data_sources(request: Request):
+    return templates.TemplateResponse(request, "data-sources.html", {
+        "app_name": "Flight Explorer",
+        "app_description": "Discover what aircraft are flying overhead right now. Look up tail numbers, track flights, and explore real-time air traffic.",
+        "data_sources": [
+            {
+                "name": "ADSB.lol API",
+                "url": "https://api.adsb.lol/v2/",
+                "provider": "ADSB.lol (community ADS-B receiver network)",
+                "coverage": "Global real-time aircraft positions",
+                "granularity": "Per-aircraft, ~10 second position updates",
+                "update_frequency": "Real-time (approximately every 10 seconds)",
+                "authentication": "Free, no key required",
+                "rate_limits": "No published limit, community-operated",
+                "history": "Real-time only (no historical positions)",
+                "key_fields": ["hex", "registration", "type", "callsign", "lat", "lng", "altitude", "speed", "heading"],
+                "caveats": "Coverage depends on community receiver density. Aircraft without ADS-B transponders are not visible. ODbL license.",
+            },
+            {
+                "name": "BTS T-100 Domestic Segment Data",
+                "url": "https://transtats.bts.gov/",
+                "provider": "Bureau of Transportation Statistics",
+                "coverage": "US domestic air carriers",
+                "granularity": "Quarterly aggregates by route",
+                "update_frequency": "Quarterly",
+                "authentication": "Free, no key required",
+                "rate_limits": "None published",
+                "history": "Historical data available (years of archives)",
+                "key_fields": ["carrier", "origin", "destination", "passengers", "seats", "departures"],
+                "caveats": "Data is quarterly, so it lags real-time by several months. Only covers US domestic carriers.",
+            },
+            {
+                "name": "FAA Aircraft Registry",
+                "url": "https://registry.faa.gov/",
+                "provider": "Federal Aviation Administration",
+                "coverage": "US-registered aircraft (N-numbers)",
+                "granularity": "Per aircraft registration",
+                "update_frequency": "Monthly",
+                "authentication": "Free, no key required",
+                "rate_limits": "None published",
+                "history": "Current registry snapshot",
+                "key_fields": ["n_number", "aircraft_type", "manufacturer", "model", "owner_name", "city", "state"],
+                "caveats": "Only covers US-registered aircraft. Owner information may be a trust or LLC rather than the actual operator.",
+            },
+        ],
+        "data_freshness": "Aircraft positions are fetched in real-time from ADSB.lol on each request. The app queries by geographic area and matches aircraft overhead based on position and heading. Seat capacity estimates use a hardcoded lookup table by aircraft type code.",
+    })
+
+
 if __name__ == "__main__":
     run_app(app, default_port=8002)

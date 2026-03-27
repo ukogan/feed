@@ -77,5 +77,29 @@ async def get_states():
     return US_STATES
 
 
+@app.get("/data")
+async def data_sources(request: Request):
+    return templates.TemplateResponse(request, "data-sources.html", {
+        "app_name": "Creek Level",
+        "app_description": "Real-time river and creek gauge monitor using USGS Water Services data. Tracks gauge height and discharge at thousands of stream gauges nationwide.",
+        "data_sources": [
+            {
+                "name": "USGS Water Services",
+                "url": "https://waterservices.usgs.gov/",
+                "provider": "US Geological Survey",
+                "coverage": "US nationwide, thousands of stream gauges",
+                "granularity": "15-minute readings per gauge",
+                "update_frequency": "Every 15 minutes",
+                "authentication": "Free, no key required",
+                "rate_limits": "No published limits (fair use expected)",
+                "history": "Decades of historical data available per site",
+                "key_fields": ["site_no", "gauge_height (param 00065)", "discharge (param 00060)", "lat", "lng", "site_name", "state"],
+                "caveats": "Not all gauges report all parameters. Some gauges may go offline during extreme weather events. Provisional data is subject to revision.",
+            },
+        ],
+        "data_freshness": "Gauge readings are fetched directly from USGS on each request. Data is near-real-time with 15-minute update intervals. Historical queries use ISO 8601 duration periods (e.g., P1D for 1 day, P7D for 7 days).",
+    })
+
+
 if __name__ == "__main__":
     run_app(app, default_port=8011)

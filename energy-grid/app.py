@@ -141,5 +141,29 @@ async def get_fuel_info():
     return FUEL_INFO
 
 
+@app.get("/data")
+async def data_sources(request: Request):
+    return templates.TemplateResponse(request, "data-sources.html", {
+        "app_name": "Energy Grid",
+        "app_description": "Real-time US energy generation mix with carbon intensity and smart timing advice. Covers all major ISOs including CAISO, ERCOT, PJM, MISO, NYISO, ISONE, and SPP.",
+        "data_sources": [
+            {
+                "name": "EIA API v2",
+                "url": "https://api.eia.gov/v2/",
+                "provider": "US Energy Information Administration",
+                "coverage": "US electricity grid, all major ISOs (CAISO, ERCOT, PJM, MISO, NYISO, ISONE, SPP)",
+                "granularity": "Hourly generation by fuel type per ISO",
+                "update_frequency": "Hourly (with 4-6 hour data lag)",
+                "authentication": "Free API key required",
+                "rate_limits": "9,000 requests/hour",
+                "history": "Since July 2018",
+                "key_fields": ["respondent (ISO)", "fueltype", "value (MWh)", "period", "type-name"],
+                "caveats": "Data has a 4-6 hour lag from real-time. Some ISOs may report fuel categories differently. Generation values are in MWh.",
+            },
+        ],
+        "data_freshness": "Data is fetched directly from the EIA API on each request. The 4-6 hour lag means 'current' data reflects conditions several hours ago. The smart timing advisor analyzes 7-day patterns to recommend optimal usage windows.",
+    })
+
+
 if __name__ == "__main__":
     run_app(app, default_port=8001)

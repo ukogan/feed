@@ -63,5 +63,29 @@ async def get_states():
     return {"states": [{"code": k, "name": v} for k, v in STATE_CODES.items()]}
 
 
+@app.get("/data")
+async def data_sources(request: Request):
+    return templates.TemplateResponse(request, "data-sources.html", {
+        "app_name": "Bridge Watch",
+        "app_description": "US bridge condition map powered by the National Bridge Inventory. Visualizes structural condition ratings, age, and traffic data for 600K+ bridges.",
+        "data_sources": [
+            {
+                "name": "National Bridge Inventory (NBI)",
+                "url": "https://geo.dot.gov/",
+                "provider": "US Department of Transportation / Federal Highway Administration",
+                "coverage": "US nationwide, 600,000+ bridges",
+                "granularity": "Per bridge, with spatial query support",
+                "update_frequency": "Annually",
+                "authentication": "Free, no key required",
+                "rate_limits": "REST API with standard rate limiting",
+                "history": "Current inventory snapshot with year-built data",
+                "key_fields": ["structure_number", "condition_deck (0-9)", "condition_superstructure (0-9)", "condition_substructure (0-9)", "year_built", "adt (traffic count)", "lat", "lng"],
+                "caveats": "Condition ratings use a 0-9 scale (9=excellent, 0=failed). Some bridges may have incomplete data. Annual updates mean recently repaired bridges may still show old ratings.",
+            },
+        ],
+        "data_freshness": "Bridge data is fetched directly from the NBI REST API per state on each request. The underlying data is updated annually by state DOTs. Condition ratings reflect the most recent inspection cycle.",
+    })
+
+
 if __name__ == "__main__":
     run_app(app, default_port=8010)
