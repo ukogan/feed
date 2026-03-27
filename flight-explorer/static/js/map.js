@@ -1,6 +1,7 @@
 /**
  * Flight Explorer Map
- * Deck.gl ScatterplotLayer + IconLayer on Mapbox for aircraft visualization.
+ * Deck.gl ScatterplotLayer + ArcLayer on Mapbox for aircraft visualization.
+ * Supports both real-time and historical flight data.
  */
 
 let map;
@@ -8,6 +9,9 @@ let deckOverlay;
 let currentLat = null;
 let currentLng = null;
 let refreshTimer = null;
+let historyDays = 1;
+let historyTracks = [];
+let liveAircraft = [];
 const REFRESH_INTERVAL = 10000; // 10 seconds
 
 // DOM refs
@@ -24,6 +28,13 @@ const detailPanel = document.getElementById('detail-panel');
 const detailTitle = document.getElementById('detail-title');
 const detailGrid = document.getElementById('detail-grid');
 const detailClose = document.getElementById('detail-close');
+const historyBtn = document.getElementById('history-btn');
+const historyStatsEl = document.getElementById('history-stats');
+const histFlightsEl = document.getElementById('hist-flights');
+const histUniqueEl = document.getElementById('hist-unique');
+const histSeatsEl = document.getElementById('hist-seats');
+const historyRepeatEl = document.getElementById('history-repeat');
+const historyLegend = document.getElementById('history-legend');
 
 
 function altitudeColor(alt) {
@@ -43,6 +54,12 @@ function formatAlt(ft) {
 function formatSpeed(kts) {
     if (!kts) return '';
     return `${Math.round(kts)} kts`;
+}
+
+function dateNDaysAgo(n) {
+    const d = new Date();
+    d.setDate(d.getDate() - n);
+    return d.toISOString().split('T')[0];
 }
 
 
@@ -100,10 +117,53 @@ function updateMap(aircraft) {
         layers.unshift(radiusCircle);
     }
 
+    // Add historical track arcs if loaded
+    if (historyTracks.length > 0) {
+        const arcData = buildArcData(historyTracks);
+        if (arcData.length > 0) {
+            const arcLayer = new deck.ArcLayer({
+                id: 'history-arcs',
+                data: arcData,
+                getSourcePosition: d => d.source,
+                getTargetPosition: d => d.target,
+                getSourceColor: [251, 146, 60, 120],
+                getTargetColor: [251, 146, 60, 40],
+                getWidth: 1.5,
+                pickable: true,
+                autoHighlight: true,
+                highlightColor: [251, 146, 60, 200],
+            });
+            layers.unshift(arcLayer);
+        }
+    }
+
     deckOverlay.setProps({
         layers,
         getTooltip: ({ object }) => {
-            if (!object || !object.callsign) return null;
+            if (!object) return null;
+
+            // Historical arc tooltip
+            if (object.callsign !== undefined && object.source !== undefined) {
+                const lines = [
+                    object.callsign || object.hex || '',
+                    object.type_code ? `Type: ${object.type_code}` : '',
+                    object.registration ? `Reg: ${object.registration}` : '',
+                    object.date ? `Date: ${object.date}` : '',
+                ].filter(Boolean);
+                return {
+                    html: `<div style="font-family:var(--font-mono);font-size:12px;line-height:1.5">${lines.join('<br>')}</div>`,
+                    style: {
+                        background: 'rgba(15,23,42,0.95)',
+                        color: '#f1f5f9',
+                        border: '1px solid #fb923c',
+                        borderRadius: '6px',
+                        padding: '6px 10px',
+                    }
+                };
+            }
+
+            // Live aircraft tooltip
+            if (!object.callsign) return null;
             const lines = [
                 object.callsign || object.hex,
                 object.type_code ? `Type: ${object.type_code}` : '',
@@ -125,6 +185,33 @@ function updateMap(aircraft) {
             };
         }
     });
+}
+
+
+/**
+ * Build arc data from historical tracks.
+ * Each track becomes one arc from first to last position within the search area.
+ */
+function buildArcData(tracks) {
+    const arcs = [];
+    for (const track of tracks) {
+        const positions = track.positions;
+        if (!positions || positions.length < 2) continue;
+
+        const first = positions[0];
+        const last = positions[positions.length - 1];
+
+        arcs.push({
+            source: [first.lng, first.lat],
+            target: [last.lng, last.lat],
+            hex: track.hex,
+            callsign: track.callsign || '',
+            registration: track.registration || '',
+            type_code: track.type_code || '',
+            date: track.date || '',
+        });
+    }
+    return arcs;
 }
 
 
@@ -185,6 +272,7 @@ async function searchLocation(query) {
         map.flyTo({ center: [currentLng, currentLat], zoom: 10 });
         loadOverhead();
         startAutoRefresh();
+        historyBtn.disabled = false;
     } catch (err) {
         statusText.textContent = `Error: ${err.message}`;
     }
@@ -204,6 +292,7 @@ async function loadOverhead() {
             return;
         }
 
+        liveAircraft = data.aircraft;
         updateMap(data.aircraft);
         renderAircraftList(data.aircraft);
         updateStats(data.summary);
@@ -239,9 +328,30 @@ async function trackAircraft(identifier) {
         }
 
         showDetail(ac);
+        loadAircraftHistory(identifier);
         statusText.textContent = `Tracking ${identifier}`;
     } catch (err) {
         statusText.textContent = `Error: ${err.message}`;
+    }
+}
+
+async function loadAircraftHistory(identifier) {
+    try {
+        const start = dateNDaysAgo(30);
+        const end = dateNDaysAgo(0);
+        const resp = await fetch(
+            `/api/aircraft/${encodeURIComponent(identifier)}/history?start=${start}&end=${end}`
+        );
+        const data = await resp.json();
+
+        if (data.error || !data.tracks || data.tracks.length === 0) return;
+
+        // Show historical tracks on map as arcs
+        historyTracks = data.tracks;
+        updateMap(liveAircraft);
+        historyLegend.classList.add('visible');
+    } catch (_) {
+        // Historical data may not be available; ignore silently
     }
 }
 
@@ -265,6 +375,76 @@ function showDetail(ac) {
     `).join('');
 
     detailPanel.classList.add('visible');
+}
+
+
+// ── History ──
+
+async function loadHistory() {
+    if (!currentLat || !currentLng) return;
+
+    historyBtn.disabled = true;
+    historyBtn.textContent = 'Loading...';
+    statusText.textContent = `Loading ${historyDays}-day history...`;
+
+    try {
+        // Load stats and tracks in parallel
+        const start = dateNDaysAgo(historyDays);
+        const end = dateNDaysAgo(0);
+
+        const [statsResp, tracksResp] = await Promise.all([
+            fetch(`/api/stats/history?lat=${currentLat}&lng=${currentLng}&days=${historyDays}&radius=10`),
+            fetch(`/api/overhead/history/tracks?lat=${currentLat}&lng=${currentLng}&start=${start}&end=${end}&radius=10&limit=200`),
+        ]);
+
+        const statsData = await statsResp.json();
+        const tracksData = await tracksResp.json();
+
+        // Update history stats
+        if (!statsData.error) {
+            historyStatsEl.style.display = 'block';
+            histFlightsEl.textContent = statsData.total_flights || '--';
+            histUniqueEl.textContent = statsData.unique_aircraft || '--';
+            histSeatsEl.textContent = statsData.total_seats ? statsData.total_seats.toLocaleString() : '--';
+
+            // Repeat visitors
+            if (statsData.repeat_visitors && statsData.repeat_visitors.length > 0) {
+                historyRepeatEl.innerHTML = `
+                    <div class="repeat-title">Repeat Visitors</div>
+                    ${statsData.repeat_visitors.slice(0, 10).map(rv => `
+                        <div class="repeat-item" data-reg="${rv.registration || ''}" data-hex="${rv.hex}">
+                            <span class="repeat-reg">${rv.registration || rv.callsign || rv.hex}</span>
+                            <span class="repeat-count">${rv.days_seen} days</span>
+                        </div>
+                    `).join('')}
+                `;
+            } else {
+                historyRepeatEl.innerHTML = '';
+            }
+        }
+
+        // Show tracks on map
+        if (!tracksData.error && tracksData.tracks) {
+            historyTracks = tracksData.tracks;
+            updateMap(liveAircraft);
+            historyLegend.classList.add('visible');
+        }
+
+        statusText.textContent = `History loaded: ${statsData.total_flights || 0} flights over ${historyDays} day(s)`;
+    } catch (err) {
+        statusText.textContent = `History error: ${err.message}`;
+    } finally {
+        historyBtn.disabled = false;
+        historyBtn.textContent = 'Load History';
+    }
+}
+
+function clearHistory() {
+    historyTracks = [];
+    historyStatsEl.style.display = 'none';
+    historyRepeatEl.innerHTML = '';
+    historyLegend.classList.remove('visible');
+    updateMap(liveAircraft);
 }
 
 
@@ -312,6 +492,32 @@ aircraftList.addEventListener('click', (e) => {
     }
 });
 
+// History range buttons
+document.querySelectorAll('.range-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        historyDays = parseInt(btn.dataset.days, 10);
+        clearHistory();
+    });
+});
+
+// History load button
+historyBtn.addEventListener('click', loadHistory);
+
+// Click on repeat visitor
+historyRepeatEl.addEventListener('click', (e) => {
+    const item = e.target.closest('.repeat-item');
+    if (!item) return;
+    const reg = item.dataset.reg;
+    const hex = item.dataset.hex;
+    const identifier = reg || hex;
+    if (identifier) {
+        tailInput.value = identifier;
+        trackAircraft(identifier);
+    }
+});
+
 
 // ── Map Init ──
 
@@ -341,6 +547,7 @@ function initMap() {
                     loadOverhead();
                     startAutoRefresh();
                     addressInput.placeholder = 'Your location detected';
+                    historyBtn.disabled = false;
                 },
                 () => {
                     statusText.textContent = 'Enter an address to get started';

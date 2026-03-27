@@ -22,6 +22,12 @@ from services.adsb_client import (
     get_seat_count,
 )
 from services.overhead_calc import find_overhead_aircraft, summarize_overhead
+from services.history_client import (
+    find_historical_overhead,
+    find_aircraft_history,
+    get_historical_stats,
+    get_indexed_dates,
+)
 
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
@@ -77,6 +83,29 @@ async def geocode(address: str = Query(...)):
         return {"lat": lat, "lng": lng, "address": address}
     except ValueError as e:
         return JSONResponse({"error": str(e)}, status_code=404)
+
+
+@app.get("/api/aircraft/{identifier}/history")
+async def get_aircraft_history_endpoint(
+    identifier: str,
+    start: str = Query(None, description="Start date YYYY-MM-DD"),
+    end: str = Query(None, description="End date YYYY-MM-DD"),
+):
+    """Get historical tracks for a specific aircraft."""
+    try:
+        tracks = find_aircraft_history(
+            identifier, start_date=start, end_date=end
+        )
+        if not tracks:
+            return JSONResponse(
+                {"error": f"No historical data found for '{identifier}'"},
+                status_code=404,
+            )
+        return {"identifier": identifier, "tracks": tracks, "count": len(tracks)}
+    except FileNotFoundError as e:
+        return JSONResponse({"error": str(e)}, status_code=404)
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 
 @app.get("/api/aircraft/{identifier}")
@@ -186,6 +215,95 @@ async def data_sources(request: Request):
         ],
         "data_freshness": "Aircraft positions are fetched in real-time from ADSB.lol on each request. The app queries by geographic area and matches aircraft overhead based on position and heading. Seat capacity estimates use a hardcoded lookup table by aircraft type code.",
     })
+
+
+@app.get("/api/overhead/history")
+async def get_overhead_history(
+    lat: float = Query(..., ge=-90, le=90),
+    lng: float = Query(..., ge=-180, le=180),
+    start: str = Query(None, description="Start date YYYY-MM-DD"),
+    end: str = Query(None, description="End date YYYY-MM-DD"),
+    radius: float = Query(10, ge=1, le=100, description="Radius in NM"),
+):
+    """Get historical overhead passes for a location and date range."""
+    try:
+        passes = find_historical_overhead(
+            lat, lng, radius_nm=radius, start_date=start, end_date=end
+        )
+        # Strip full positions from response to keep payload small
+        for p in passes:
+            p.pop("positions", None)
+
+        return {
+            "location": {"lat": lat, "lng": lng},
+            "radius_nm": radius,
+            "start": start,
+            "end": end,
+            "passes": passes,
+            "count": len(passes),
+        }
+    except FileNotFoundError as e:
+        return JSONResponse({"error": str(e)}, status_code=404)
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.get("/api/overhead/history/tracks")
+async def get_overhead_history_tracks(
+    lat: float = Query(..., ge=-90, le=90),
+    lng: float = Query(..., ge=-180, le=180),
+    start: str = Query(None, description="Start date YYYY-MM-DD"),
+    end: str = Query(None, description="End date YYYY-MM-DD"),
+    radius: float = Query(10, ge=1, le=100, description="Radius in NM"),
+    limit: int = Query(50, ge=1, le=500, description="Max tracks to return"),
+):
+    """Get historical overhead passes with full position tracks (for map arcs)."""
+    try:
+        passes = find_historical_overhead(
+            lat, lng, radius_nm=radius, start_date=start, end_date=end
+        )
+        # Limit and include positions for map rendering
+        passes = passes[:limit]
+
+        return {
+            "location": {"lat": lat, "lng": lng},
+            "radius_nm": radius,
+            "tracks": passes,
+            "count": len(passes),
+        }
+    except FileNotFoundError as e:
+        return JSONResponse({"error": str(e)}, status_code=404)
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.get("/api/stats/history")
+async def get_stats_history(
+    lat: float = Query(..., ge=-90, le=90),
+    lng: float = Query(..., ge=-180, le=180),
+    days: int = Query(7, ge=1, le=90, description="Number of days"),
+    radius: float = Query(10, ge=1, le=100, description="Radius in NM"),
+):
+    """Get aggregate historical statistics for overhead flights."""
+    try:
+        stats = get_historical_stats(lat, lng, radius_nm=radius, days=days)
+        return stats
+    except FileNotFoundError as e:
+        return JSONResponse({"error": str(e)}, status_code=404)
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.get("/api/history/dates")
+async def get_history_dates():
+    """Get list of dates with indexed historical data."""
+    try:
+        dates = get_indexed_dates()
+        return {"dates": dates}
+    except FileNotFoundError as e:
+        return JSONResponse({"error": str(e)}, status_code=404)
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 
 if __name__ == "__main__":

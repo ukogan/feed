@@ -266,6 +266,125 @@
     gap: 0.5rem;
 }
 
+/* History controls */
+.history-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.history-range-btns {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.range-btn {
+    flex: 1;
+    padding: 0.375rem 0.5rem;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 0.375rem;
+    color: var(--text-secondary);
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.range-btn:hover {
+    border-color: var(--accent);
+    color: var(--text-primary);
+}
+
+.range-btn.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.history-load-btn {
+    width: 100%;
+    font-size: 0.8125rem;
+}
+
+.history-stats {
+    margin-top: 0.75rem;
+}
+
+.history-repeat {
+    margin-top: 0.5rem;
+}
+
+.repeat-title {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.375rem;
+}
+
+.repeat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    background: var(--bg-primary);
+    border-radius: 0.25rem;
+    margin-bottom: 0.25rem;
+    cursor: pointer;
+}
+
+.repeat-item:hover {
+    background: var(--bg-tertiary);
+}
+
+.repeat-reg {
+    font-family: var(--font-mono);
+    font-weight: 500;
+}
+
+.repeat-count {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+}
+
+/* History track arcs on map */
+.history-legend {
+    position: absolute;
+    bottom: 2rem;
+    left: 0.75rem;
+    background: rgba(15, 23, 42, 0.9);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    border-radius: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.6875rem;
+    color: var(--text-secondary);
+    z-index: 10;
+    display: none;
+}
+
+.history-legend.visible {
+    display: block;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-bottom: 0.125rem;
+}
+
+.legend-swatch {
+    width: 16px;
+    height: 3px;
+    border-radius: 1px;
+}
+
 .empty-state svg {
     opacity: 0.3;
 }
@@ -304,6 +423,37 @@
             </div>
         </div>
 
+        <div class="sidebar-section">
+            <div class="section-title">Historical Data</div>
+            <div class="history-controls">
+                <div class="history-range-btns">
+                    <button class="range-btn active" data-days="1">Today</button>
+                    <button class="range-btn" data-days="7">7 Days</button>
+                    <button class="range-btn" data-days="30">30 Days</button>
+                </div>
+                <button class="feed-btn feed-btn-accent history-load-btn" id="history-btn" disabled>
+                    Load History
+                </button>
+            </div>
+            <div class="history-stats" id="history-stats" style="display:none;">
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-number" id="hist-flights">--</div>
+                        <div class="stat-text">Hist. Flights</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number" id="hist-unique">--</div>
+                        <div class="stat-text">Unique A/C</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number" id="hist-seats">--</div>
+                        <div class="stat-text">Total Seats</div>
+                    </div>
+                </div>
+                <div class="history-repeat" id="history-repeat"></div>
+            </div>
+        </div>
+
         <div class="sidebar-section" style="flex: 1; overflow-y: auto;">
             <div class="section-title">Aircraft</div>
             <div class="aircraft-list" id="aircraft-list">
@@ -339,6 +489,16 @@
         <div class="map-status" id="map-status">
             <span class="refresh-dot"></span>
             <span id="status-text">Waiting for location...</span>
+        </div>
+        <div class="history-legend" id="history-legend">
+            <div class="legend-item">
+                <span class="legend-swatch" style="background: rgb(56, 189, 248)"></span>
+                <span>Live aircraft</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-swatch" style="background: rgb(251, 146, 60)"></span>
+                <span>Historical tracks</span>
+            </div>
         </div>
     </div>
 </div>

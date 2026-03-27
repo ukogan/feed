@@ -1,0 +1,3 @@
+# Ignore cached trace files and database (large, generated)
+cache/
+flights.db
