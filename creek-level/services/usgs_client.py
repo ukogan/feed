@@ -23,38 +23,11 @@ US_STATES = {
 
 
 async def fetch_sites(state_cd: str = "CA") -> list[dict]:
-    """Fetch active stream gauge sites for a state.
+    """Fetch active stream gauge sites for a state via the IV endpoint.
 
-    Returns list of dicts with: site_no, station_nm, dec_lat_va, dec_long_va, site_tp_cd.
+    Uses instantaneous values endpoint which returns both site locations
+    and current readings in one call.
     """
-    params = {
-        "format": "json",
-        "stateCd": state_cd,
-        "siteType": "ST",
-        "siteStatus": "active",
-        "hasDataTypeCd": "iv",
-    }
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        resp = await client.get(f"{BASE_URL}/site/", params=params)
-        resp.raise_for_status()
-        data = resp.json()
-
-    sites = []
-    ts_list = data.get("value", {}).get("timeSeries", [])
-
-    # The site endpoint returns a different structure
-    # Parse from the USGS JSON format
-    site_info = data.get("value", {}).get("timeSeries", [])
-
-    # Actually, the site endpoint uses a different JSON shape
-    # Let's handle both the RDB and JSON format
-    if "value" in data and "timeSeries" in data["value"]:
-        # IV-style response (shouldn't happen for site endpoint)
-        pass
-
-    # The site/?format=json actually doesn't return standard JSON for sites
-    # We need to use the IV endpoint to discover sites with current data
-    # Re-fetch using the IV endpoint which gives us sites + latest values
     return await _fetch_sites_via_iv(state_cd)
 
 
@@ -70,8 +43,8 @@ async def _fetch_sites_via_iv(state_cd: str) -> list[dict]:
         "siteType": "ST",
         "siteStatus": "active",
     }
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        resp = await client.get(f"{BASE_URL}/iv/", params=params)
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        resp = await client.get(f"{BASE_URL}/iv/", params=params, follow_redirects=True)
         resp.raise_for_status()
         data = resp.json()
 

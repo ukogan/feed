@@ -29,15 +29,12 @@ PARAMETER = "88101"
 PARAMETER_NAME = "PM2.5"
 
 # Years to backfill
-START_YEAR = 2022
+START_YEAR = 2024
 END_YEAR = 2025
 
+# TEMP: Only key states for quick initial data
 US_STATES = [
-    "01", "02", "04", "05", "06", "08", "09", "10", "11", "12",
-    "13", "15", "16", "17", "18", "19", "20", "21", "22", "23",
-    "24", "25", "26", "27", "28", "29", "30", "31", "32", "33",
-    "34", "35", "36", "37", "38", "39", "40", "41", "42", "44",
-    "45", "46", "47", "48", "49", "50", "51", "53", "54", "55", "56",
+    "06", "36", "48", "12", "53",  # CA, NY, TX, FL, WA
 ]
 
 
@@ -46,7 +43,7 @@ def fetch_daily_data(state_code: str, year: int) -> list[dict]:
     url = f"{BASE_URL}/dailyData/byState"
     params = {
         "email": EPA_EMAIL,
-        "key": "test",
+        "key": "tealkit72",
         "param": PARAMETER,
         "bdate": f"{year}0101",
         "edate": f"{year}1231",

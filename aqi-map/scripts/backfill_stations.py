@@ -67,7 +67,7 @@ def fetch_monitors(state_code: str, parameter: str = "88101") -> list[dict]:
     url = f"{BASE_URL}/monitors/byState"
     params = {
         "email": EPA_EMAIL,
-        "key": "test",  # EPA AQS uses "test" as public key
+        "key": "tealkit72",  # EPA AQS uses "test" as public key
         "param": parameter,
         "bdate": "20200101",
         "edate": "20201231",
