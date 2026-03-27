@@ -9,8 +9,8 @@ from datetime import datetime, timedelta
 from urllib.parse import urlencode
 
 
-CL_BASE = "https://www.courtlistener.com/api/rest/v4"
-CL_SEARCH = "https://www.courtlistener.com/api/rest/v4/search"
+CL_BASE = "https://www.courtlistener.com/api/rest/v4/"
+CL_SEARCH = "https://www.courtlistener.com/api/rest/v4/search/"
 
 # Major federal courts
 FEDERAL_COURTS = {
@@ -49,7 +49,7 @@ async def search_opinions(
     if court:
         params["court"] = court
 
-    async with httpx.AsyncClient(timeout=30) as client:
+    async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
         resp = await client.get(CL_SEARCH, params=params)
         resp.raise_for_status()
         data = resp.json()
@@ -87,7 +87,7 @@ async def fetch_opinions(
         "page_size": min(limit, 20),
     }
 
-    async with httpx.AsyncClient(timeout=30) as client:
+    async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
         resp = await client.get(url, params=params)
         resp.raise_for_status()
         data = resp.json()
@@ -125,7 +125,7 @@ async def fetch_dockets(
     if court:
         params["court__id"] = court
 
-    async with httpx.AsyncClient(timeout=30) as client:
+    async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
         resp = await client.get(url, params=params)
         resp.raise_for_status()
         data = resp.json()
@@ -154,7 +154,7 @@ async def fetch_courts() -> list[dict]:
         "page_size": 100,
     }
 
-    async with httpx.AsyncClient(timeout=30) as client:
+    async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
         resp = await client.get(url, params=params)
         resp.raise_for_status()
         data = resp.json()
