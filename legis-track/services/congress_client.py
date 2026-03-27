@@ -77,8 +77,8 @@ async def fetch_bills(limit: int = 20) -> list[dict]:
             "congress": b.get("congress", ""),
             "type": b.get("type", ""),
             "number": b.get("number", ""),
-            "status": b.get("latestAction", {}).get("text", ""),
-            "status_date": b.get("latestAction", {}).get("actionDate", ""),
+            "status": (b.get("latestAction") or {}).get("text", ""),
+            "status_date": (b.get("latestAction") or {}).get("actionDate", ""),
             "url": b.get("url", ""),
         })
     return bills
@@ -108,58 +108,60 @@ async def fetch_member_bills(member_id: str, limit: int = 20) -> list[dict]:
             "title": b.get("title", ""),
             "introduced": b.get("introducedDate", ""),
             "congress": b.get("congress", ""),
-            "status": b.get("latestAction", {}).get("text", ""),
-            "status_date": b.get("latestAction", {}).get("actionDate", ""),
+            "status": (b.get("latestAction") or {}).get("text", ""),
+            "status_date": (b.get("latestAction") or {}).get("actionDate", ""),
         })
     return bills
 
 
 async def fetch_contributions(candidate_name: str = "", limit: int = 20) -> list[dict]:
     """Fetch campaign contributions from FEC API."""
-    if not FEC_API_KEY:
+    if not FEC_API_KEY or not candidate_name:
         return []
 
-    # First find the candidate
-    url = "https://api.open.fec.gov/v1/candidates/search/"
-    params = {
-        "api_key": FEC_API_KEY,
-        "q": candidate_name,
-        "per_page": 5,
-        "sort": "-election_year",
-    }
+    try:
+        # Search with just last name for better FEC matching
+        search_name = candidate_name.split(",")[0].strip()
+        url = "https://api.open.fec.gov/v1/candidates/search/"
+        params = {
+            "api_key": FEC_API_KEY,
+            "q": search_name,
+            "per_page": 5,
+        }
 
-    async with httpx.AsyncClient(timeout=30) as client:
-        resp = await client.get(url, params=params)
-        resp.raise_for_status()
-        data = resp.json()
+        async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
+            resp = await client.get(url, params=params)
+            resp.raise_for_status()
+            data = resp.json()
 
-    candidates = data.get("results", [])
-    if not candidates:
+        candidates = data.get("results", [])
+        if not candidates:
+            return []
+
+        candidate_id = candidates[0].get("candidate_id", "")
+
+        # Fetch their financial totals
+        url = f"https://api.open.fec.gov/v1/candidate/{candidate_id}/totals/"
+        params = {"api_key": FEC_API_KEY, "per_page": 1}
+
+        async with httpx.AsyncClient(timeout=30, follow_redirects=True) as client:
+            resp = await client.get(url, params=params)
+            resp.raise_for_status()
+            data = resp.json()
+
+        totals = data.get("results", [{}])[0] if data.get("results") else {}
+
+        return [{
+            "candidate_id": candidate_id,
+            "candidate_name": candidates[0].get("name", ""),
+            "party": candidates[0].get("party", ""),
+            "office": candidates[0].get("office_full", ""),
+            "state": candidates[0].get("state", ""),
+            "total_receipts": totals.get("receipts", 0),
+            "total_disbursements": totals.get("disbursements", 0),
+            "individual_contributions": totals.get("individual_contributions", 0),
+            "pac_contributions": totals.get("other_political_committee_contributions", 0),
+            "election_year": totals.get("cycle", ""),
+        }]
+    except Exception:
         return []
-
-    candidate_id = candidates[0].get("candidate_id", "")
-
-    # Fetch their committee's top contributors
-    # First get their principal committee
-    url = f"https://api.open.fec.gov/v1/candidate/{candidate_id}/totals/"
-    params = {"api_key": FEC_API_KEY, "per_page": 1}
-
-    async with httpx.AsyncClient(timeout=30) as client:
-        resp = await client.get(url, params=params)
-        resp.raise_for_status()
-        data = resp.json()
-
-    totals = data.get("results", [{}])[0] if data.get("results") else {}
-
-    return [{
-        "candidate_id": candidate_id,
-        "candidate_name": candidates[0].get("name", ""),
-        "party": candidates[0].get("party", ""),
-        "office": candidates[0].get("office_full", ""),
-        "state": candidates[0].get("state", ""),
-        "total_receipts": totals.get("receipts", 0),
-        "total_disbursements": totals.get("disbursements", 0),
-        "individual_contributions": totals.get("individual_contributions", 0),
-        "pac_contributions": totals.get("other_political_committee_contributions", 0),
-        "election_year": totals.get("cycle", ""),
-    }]

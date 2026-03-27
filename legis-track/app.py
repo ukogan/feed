@@ -58,10 +58,32 @@ async def get_bills(limit: int = Query(20, ge=1, le=100)):
 @app.get("/api/member/{member_id}")
 async def get_member_detail(member_id: str):
     """Get detailed view for a specific member."""
-    members = await fetch_members()
-    member = next((m for m in members if m["id"] == member_id), None)
+    # Fetch member directly by bioguideId rather than searching the first 50
+    from services.congress_client import CONGRESS_API_KEY
+    member = None
+    if CONGRESS_API_KEY:
+        try:
+            import httpx
+            url = f"https://api.congress.gov/v3/member/{member_id}"
+            params = {"api_key": CONGRESS_API_KEY, "format": "json"}
+            async with httpx.AsyncClient(timeout=30) as client:
+                resp = await client.get(url, params=params)
+                resp.raise_for_status()
+                data = resp.json()
+            m = data.get("member", {})
+            if m:
+                member = {
+                    "id": m.get("bioguideId", member_id),
+                    "name": f"{m.get('lastName', '')}, {m.get('firstName', '')}",
+                    "party": (m.get("partyHistory", [{}])[0].get("partyName", "") or "")[:1],
+                    "state": m.get("state", ""),
+                    "chamber": "",
+                }
+        except Exception:
+            pass
+
     if not member:
-        return JSONResponse({"error": f"Member not found: {member_id}"}, status_code=404)
+        member = {"id": member_id, "name": member_id, "party": "", "state": "", "chamber": ""}
 
     sponsored = await fetch_member_bills(member_id)
     contributions = await fetch_contributions(member.get("name", ""))
