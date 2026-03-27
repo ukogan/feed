@@ -32,9 +32,10 @@ async def fetch_fuel_mix(
     """Fetch hourly generation by fuel type from EIA.
 
     Uses electricity/rto/fuel-type-data endpoint.
+    EIA data has ~4-6 hour lag, so we extend the query window.
     """
     end = datetime.utcnow()
-    start = end - timedelta(hours=hours_back)
+    start = end - timedelta(hours=hours_back + 8)
 
     params = {
         "api_key": api_key,

@@ -54,7 +54,8 @@ function renderStackedArea(records) {
     const fuelTypes = [...new Set(records.map(d => d.fueltype || d['type-name'] || 'OTH'))];
 
     const timeData = Array.from(byPeriod, ([period, recs]) => {
-        const entry = { period: new Date(period) };
+        // EIA periods are "2026-03-26T03" — append ":00" for valid ISO date
+        const entry = { period: new Date(period.length <= 13 ? period + ':00' : period) };
         for (const fuel of fuelTypes) {
             const r = recs.find(x => (x.fueltype || x['type-name']) === fuel);
             entry[fuel] = r && r.value ? Math.max(0, +r.value) : 0;
