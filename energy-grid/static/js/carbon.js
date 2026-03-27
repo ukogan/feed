@@ -503,6 +503,65 @@ function renderCarbonCurveChart(actualHourly, optimizedHourly) {
         .style('fill', '#94a3b8').style('font-size', '10px');
 }
 
+// ── Green Button Upload ──
+
+async function handleGreenButtonUpload(file) {
+    const uploadBtn = document.getElementById('upload-btn');
+    const summaryEl = document.getElementById('upload-summary');
+
+    uploadBtn.textContent = 'Parsing...';
+    uploadBtn.disabled = true;
+    summaryEl.style.display = 'none';
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await fetch('/api/carbon-account/upload', {
+            method: 'POST',
+            body: formData,
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+            summaryEl.style.display = 'block';
+            summaryEl.style.color = '#ef4444';
+            summaryEl.style.borderColor = 'rgba(239, 68, 68, 0.25)';
+            summaryEl.style.background = 'rgba(239, 68, 68, 0.08)';
+            summaryEl.textContent = `Error: ${data.error}`;
+            return;
+        }
+
+        // Apply the parsed profile to the usage editor
+        usageProfile = data.hourly_profile.map(v => Math.round(v * 10) / 10);
+        renderUsageBars();
+
+        // Switch preset selector to "custom"
+        document.getElementById('profile-preset').value = 'custom';
+
+        // Show upload summary
+        summaryEl.style.display = 'block';
+        summaryEl.style.color = '#22c55e';
+        summaryEl.style.borderColor = 'rgba(34, 197, 94, 0.25)';
+        summaryEl.style.background = 'rgba(34, 197, 94, 0.08)';
+        summaryEl.textContent = `Loaded ${data.num_days} days of data (${data.date_range.start} to ${data.date_range.end}), averaging ${data.daily_avg_kwh} kWh/day from ${data.num_readings} readings.`;
+
+        // Auto-trigger analysis
+        runAnalysis();
+    } catch (err) {
+        console.error('Upload failed:', err);
+        summaryEl.style.display = 'block';
+        summaryEl.style.color = '#ef4444';
+        summaryEl.style.borderColor = 'rgba(239, 68, 68, 0.25)';
+        summaryEl.style.background = 'rgba(239, 68, 68, 0.08)';
+        summaryEl.textContent = `Upload failed: ${err.message}`;
+    } finally {
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 0.25rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload Green Button XML`;
+    }
+}
+
 // ── Event Listeners ──
 
 document.getElementById('profile-preset').addEventListener('change', (e) => {
@@ -510,6 +569,15 @@ document.getElementById('profile-preset').addEventListener('change', (e) => {
 });
 
 document.getElementById('analyze-btn').addEventListener('click', runAnalysis);
+
+document.getElementById('green-button-file').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        handleGreenButtonUpload(file);
+    }
+    // Reset file input so the same file can be re-selected
+    e.target.value = '';
+});
 
 // Resize handler
 let resizeTimer;

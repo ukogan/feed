@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import Query, Request
+from fastapi import Query, Request, UploadFile
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -27,6 +27,7 @@ from services.carbon_accountant import (
     get_typical_profiles,
     PRESET_PROFILES,
 )
+from services.green_button import parse_green_button
 
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
@@ -254,6 +255,39 @@ async def carbon_demo(iso: str = Query("CISO")):
         "carbon": carbon_result,
         "optimization": optimization,
     }
+
+
+@app.post("/api/carbon-account/upload")
+async def carbon_upload(file: UploadFile):
+    """Parse an uploaded Green Button XML file and return the hourly usage profile."""
+    if not file.filename:
+        return JSONResponse({"error": "No file provided"}, status_code=400)
+
+    # Basic content-type / extension check
+    fname = file.filename.lower()
+    if not fname.endswith(".xml") and "xml" not in (file.content_type or ""):
+        return JSONResponse(
+            {"error": "File must be an XML file (.xml)"},
+            status_code=400,
+        )
+
+    contents = await file.read()
+    if not contents:
+        return JSONResponse({"error": "Uploaded file is empty"}, status_code=400)
+
+    # Cap file size at 10 MB
+    if len(contents) > 10 * 1024 * 1024:
+        return JSONResponse(
+            {"error": "File too large (max 10 MB)"},
+            status_code=400,
+        )
+
+    try:
+        result = parse_green_button(contents)
+    except ValueError as e:
+        return JSONResponse({"error": str(e)}, status_code=400)
+
+    return result
 
 
 if __name__ == "__main__":

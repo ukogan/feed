@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:espi="http://naesb.org/espi">
+  <id>urn:uuid:sample-green-button-data</id>
+  <title>Sample Green Button Usage Data</title>
+  <updated>2025-03-15T00:00:00Z</updated>
+
+  <!-- ReadingType: Wh with 10^0 multiplier -->
+  <entry>
+    <id>urn:uuid:reading-type-1</id>
+    <title>Electric Usage Reading Type</title>
+    <content>
+      <ReadingType xmlns="http://naesb.org/espi">
+        <powerOfTenMultiplier>0</powerOfTenMultiplier>
+        <uom>72</uom>
+      </ReadingType>
+    </content>
+  </entry>
+
+  <!-- Day 1: Saturday 2025-03-08 -->
+  <entry>
+    <id>urn:uuid:interval-block-day1</id>
+    <title>Interval Block Day 1</title>
+    <content>
+      <IntervalBlock xmlns="http://naesb.org/espi">
+        <interval>
+          <duration>86400</duration>
+          <start>1741392000</start>
+        </interval>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741392000</start></timePeriod><value>580</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741395600</start></timePeriod><value>520</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741399200</start></timePeriod><value>430</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741402800</start></timePeriod><value>390</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741406400</start></timePeriod><value>380</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741410000</start></timePeriod><value>420</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741413600</start></timePeriod><value>750</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741417200</start></timePeriod><value>1180</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741420800</start></timePeriod><value>1420</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741424400</start></timePeriod><value>1280</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741428000</start></timePeriod><value>1150</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741431600</start></timePeriod><value>1080</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741435200</start></timePeriod><value>980</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741438800</start></timePeriod><value>950</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741442400</start></timePeriod><value>1020</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741446000</start></timePeriod><value>1150</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741449600</start></timePeriod><value>1350</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741453200</start></timePeriod><value>1780</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741456800</start></timePeriod><value>2250</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741460400</start></timePeriod><value>2480</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741464000</start></timePeriod><value>2320</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741467600</start></timePeriod><value>1850</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741471200</start></timePeriod><value>1280</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741474800</start></timePeriod><value>780</value></IntervalReading>
+      </IntervalBlock>
+    </content>
+  </entry>
+
+  <!-- Day 2: Sunday 2025-03-09 -->
+  <entry>
+    <id>urn:uuid:interval-block-day2</id>
+    <title>Interval Block Day 2</title>
+    <content>
+      <IntervalBlock xmlns="http://naesb.org/espi">
+        <interval>
+          <duration>86400</duration>
+          <start>1741478400</start>
+        </interval>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741478400</start></timePeriod><value>620</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741482000</start></timePeriod><value>540</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741485600</start></timePeriod><value>450</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741489200</start></timePeriod><value>410</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741492800</start></timePeriod><value>400</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741496400</start></timePeriod><value>450</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741500000</start></timePeriod><value>780</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741503600</start></timePeriod><value>1220</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741507200</start></timePeriod><value>1480</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741510800</start></timePeriod><value>1350</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741514400</start></timePeriod><value>1200</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741518000</start></timePeriod><value>1120</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741521600</start></timePeriod><value>1050</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741525200</start></timePeriod><value>1000</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741528800</start></timePeriod><value>1080</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741532400</start></timePeriod><value>1200</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741536000</start></timePeriod><value>1400</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741539600</start></timePeriod><value>1820</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741543200</start></timePeriod><value>2300</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741546800</start></timePeriod><value>2520</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741550400</start></timePeriod><value>2380</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741554000</start></timePeriod><value>1900</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741557600</start></timePeriod><value>1320</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741561200</start></timePeriod><value>820</value></IntervalReading>
+      </IntervalBlock>
+    </content>
+  </entry>
+
+  <!-- Day 3: Monday 2025-03-10 -->
+  <entry>
+    <id>urn:uuid:interval-block-day3</id>
+    <title>Interval Block Day 3</title>
+    <content>
+      <IntervalBlock xmlns="http://naesb.org/espi">
+        <interval>
+          <duration>86400</duration>
+          <start>1741564800</start>
+        </interval>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741564800</start></timePeriod><value>550</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741568400</start></timePeriod><value>480</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741572000</start></timePeriod><value>400</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741575600</start></timePeriod><value>370</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741579200</start></timePeriod><value>360</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741582800</start></timePeriod><value>480</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741586400</start></timePeriod><value>850</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741590000</start></timePeriod><value>1250</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741593600</start></timePeriod><value>1550</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741597200</start></timePeriod><value>1300</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741600800</start></timePeriod><value>1180</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741604400</start></timePeriod><value>1050</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741608000</start></timePeriod><value>960</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741611600</start></timePeriod><value>920</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741615200</start></timePeriod><value>980</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741618800</start></timePeriod><value>1100</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741622400</start></timePeriod><value>1300</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741626000</start></timePeriod><value>1750</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741629600</start></timePeriod><value>2200</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741633200</start></timePeriod><value>2450</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741636800</start></timePeriod><value>2280</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741640400</start></timePeriod><value>1800</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741644000</start></timePeriod><value>1250</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741647600</start></timePeriod><value>750</value></IntervalReading>
+      </IntervalBlock>
+    </content>
+  </entry>
+
+  <!-- Day 4: Tuesday 2025-03-11 -->
+  <entry>
+    <id>urn:uuid:interval-block-day4</id>
+    <title>Interval Block Day 4</title>
+    <content>
+      <IntervalBlock xmlns="http://naesb.org/espi">
+        <interval>
+          <duration>86400</duration>
+          <start>1741651200</start>
+        </interval>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741651200</start></timePeriod><value>560</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741654800</start></timePeriod><value>490</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741658400</start></timePeriod><value>420</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741662000</start></timePeriod><value>380</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741665600</start></timePeriod><value>370</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741669200</start></timePeriod><value>490</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741672800</start></timePeriod><value>830</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741676400</start></timePeriod><value>1200</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741680000</start></timePeriod><value>1500</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741683600</start></timePeriod><value>1320</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741687200</start></timePeriod><value>1160</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741690800</start></timePeriod><value>1090</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741694400</start></timePeriod><value>970</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741698000</start></timePeriod><value>940</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741701600</start></timePeriod><value>1010</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741705200</start></timePeriod><value>1130</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741708800</start></timePeriod><value>1320</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741712400</start></timePeriod><value>1800</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741716000</start></timePeriod><value>2180</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741719600</start></timePeriod><value>2500</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741723200</start></timePeriod><value>2350</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741726800</start></timePeriod><value>1820</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741730400</start></timePeriod><value>1300</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741734000</start></timePeriod><value>770</value></IntervalReading>
+      </IntervalBlock>
+    </content>
+  </entry>
+
+  <!-- Day 5: Wednesday 2025-03-12 -->
+  <entry>
+    <id>urn:uuid:interval-block-day5</id>
+    <title>Interval Block Day 5</title>
+    <content>
+      <IntervalBlock xmlns="http://naesb.org/espi">
+        <interval>
+          <duration>86400</duration>
+          <start>1741737600</start>
+        </interval>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741737600</start></timePeriod><value>540</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741741200</start></timePeriod><value>470</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741744800</start></timePeriod><value>410</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741748400</start></timePeriod><value>380</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741752000</start></timePeriod><value>370</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741755600</start></timePeriod><value>470</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741759200</start></timePeriod><value>820</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741762800</start></timePeriod><value>1230</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741766400</start></timePeriod><value>1480</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741770000</start></timePeriod><value>1310</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741773600</start></timePeriod><value>1170</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741777200</start></timePeriod><value>1060</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741780800</start></timePeriod><value>950</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741784400</start></timePeriod><value>930</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741788000</start></timePeriod><value>1000</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741791600</start></timePeriod><value>1120</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741795200</start></timePeriod><value>1280</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741798800</start></timePeriod><value>1760</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741802400</start></timePeriod><value>2220</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741806000</start></timePeriod><value>2460</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741809600</start></timePeriod><value>2300</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741813200</start></timePeriod><value>1830</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741816800</start></timePeriod><value>1260</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741820400</start></timePeriod><value>760</value></IntervalReading>
+      </IntervalBlock>
+    </content>
+  </entry>
+
+  <!-- Day 6: Thursday 2025-03-13 -->
+  <entry>
+    <id>urn:uuid:interval-block-day6</id>
+    <title>Interval Block Day 6</title>
+    <content>
+      <IntervalBlock xmlns="http://naesb.org/espi">
+        <interval>
+          <duration>86400</duration>
+          <start>1741824000</start>
+        </interval>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741824000</start></timePeriod><value>570</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741827600</start></timePeriod><value>500</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741831200</start></timePeriod><value>430</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741834800</start></timePeriod><value>390</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741838400</start></timePeriod><value>380</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741842000</start></timePeriod><value>500</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741845600</start></timePeriod><value>860</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741849200</start></timePeriod><value>1240</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741852800</start></timePeriod><value>1520</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741856400</start></timePeriod><value>1340</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741860000</start></timePeriod><value>1190</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741863600</start></timePeriod><value>1100</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741867200</start></timePeriod><value>990</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741870800</start></timePeriod><value>950</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741874400</start></timePeriod><value>1030</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741878000</start></timePeriod><value>1160</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741881600</start></timePeriod><value>1380</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741885200</start></timePeriod><value>1810</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741888800</start></timePeriod><value>2260</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741892400</start></timePeriod><value>2490</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741896000</start></timePeriod><value>2340</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741899600</start></timePeriod><value>1870</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741903200</start></timePeriod><value>1290</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741906800</start></timePeriod><value>790</value></IntervalReading>
+      </IntervalBlock>
+    </content>
+  </entry>
+
+  <!-- Day 7: Friday 2025-03-14 -->
+  <entry>
+    <id>urn:uuid:interval-block-day7</id>
+    <title>Interval Block Day 7</title>
+    <content>
+      <IntervalBlock xmlns="http://naesb.org/espi">
+        <interval>
+          <duration>86400</duration>
+          <start>1741910400</start>
+        </interval>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741910400</start></timePeriod><value>600</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741914000</start></timePeriod><value>510</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741917600</start></timePeriod><value>440</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741921200</start></timePeriod><value>400</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741924800</start></timePeriod><value>390</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741928400</start></timePeriod><value>510</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741932000</start></timePeriod><value>870</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741935600</start></timePeriod><value>1260</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741939200</start></timePeriod><value>1530</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741942800</start></timePeriod><value>1360</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741946400</start></timePeriod><value>1210</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741950000</start></timePeriod><value>1110</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741953600</start></timePeriod><value>1000</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741957200</start></timePeriod><value>960</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741960800</start></timePeriod><value>1050</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741964400</start></timePeriod><value>1180</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741968000</start></timePeriod><value>1400</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741971600</start></timePeriod><value>1850</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741975200</start></timePeriod><value>2280</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741978800</start></timePeriod><value>2530</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741982400</start></timePeriod><value>2360</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741986000</start></timePeriod><value>1880</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741989600</start></timePeriod><value>1310</value></IntervalReading>
+        <IntervalReading><timePeriod><duration>3600</duration><start>1741993200</start></timePeriod><value>800</value></IntervalReading>
+      </IntervalBlock>
+    </content>
+  </entry>
+
+</feed>

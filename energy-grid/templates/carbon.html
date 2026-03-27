@@ -191,30 +191,44 @@
     background: var(--bg-tertiary);
     border: 1px dashed var(--border);
     border-radius: 0.375rem;
-    color: var(--text-muted);
+    color: var(--text-secondary);
     font-family: var(--font-sans);
     font-size: 0.75rem;
-    cursor: not-allowed;
+    cursor: pointer;
     text-align: center;
     position: relative;
+    transition: all 0.15s;
 }
-.upload-btn-tooltip {
-    display: none;
-    position: absolute;
-    bottom: calc(100% + 0.5rem);
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
+.upload-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+}
+
+.upload-summary {
+    margin-top: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: rgba(34, 197, 94, 0.08);
+    border: 1px solid rgba(34, 197, 94, 0.25);
     border-radius: 0.375rem;
-    padding: 0.375rem 0.625rem;
     font-size: 0.6875rem;
-    color: var(--text-secondary);
-    white-space: nowrap;
-    z-index: 10;
+    color: #22c55e;
+    line-height: 1.5;
+    display: none;
 }
-.upload-btn:hover .upload-btn-tooltip {
-    display: block;
+
+.sample-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    margin-top: 0.25rem;
+    transition: color 0.15s;
+}
+.sample-link:hover {
+    color: var(--text-secondary);
 }
 
 /* Results panel */
@@ -433,11 +447,16 @@
                 Analyze Carbon Footprint
             </button>
 
-            <div class="upload-btn" style="margin-top: 0.5rem;">
+            <input type="file" id="green-button-file" accept=".xml" style="display: none;">
+            <button class="upload-btn" id="upload-btn" style="margin-top: 0.5rem;" onclick="document.getElementById('green-button-file').click();">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 0.25rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 Upload Green Button XML
-                <div class="upload-btn-tooltip">Coming soon -- Green Button smart meter data import</div>
-            </div>
+            </button>
+            <div class="upload-summary" id="upload-summary"></div>
+            <a href="/static/sample_green_button.xml" download class="sample-link" style="margin-top: 0.375rem;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download sample file to try it out
+            </a>
         </div>
     </div>
 
