@@ -28,6 +28,8 @@ from services.history_client import (
     get_historical_stats,
     get_indexed_dates,
 )
+from services.opensky_client import fetch_aircraft_flights, fetch_flight_track
+from services.history_analyzer import analyze_overhead_history
 
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
@@ -318,6 +320,140 @@ async def get_history_dates():
         return {"dates": dates}
     except FileNotFoundError as e:
         return JSONResponse({"error": str(e)}, status_code=404)
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.get("/above-me")
+async def above_me_page(request: Request):
+    return templates.TemplateResponse(request, "above-me.html", {
+        "mapbox_token": MAPBOX_TOKEN,
+    })
+
+
+@app.get("/api/above-me")
+async def get_above_me(
+    lat: float = Query(37.47, ge=-90, le=90),
+    lng: float = Query(-122.23, ge=-180, le=180),
+    days: int = Query(7, ge=1, le=30),
+):
+    """Get current overhead aircraft and their flight histories.
+
+    Uses ADSB.lol for real-time overhead detection, then queries OpenSky
+    for each aircraft's flight history over the last N days. Results are
+    aggregated by destination airport, country, and US state.
+    """
+    import asyncio
+
+    try:
+        # Step 1: Get current overhead aircraft from ADSB.lol
+        aircraft = await fetch_aircraft_in_area(lat, lng, radius_nm=10)
+        overhead = find_overhead_aircraft(aircraft, lat, lng, radius_nm=10)
+
+        if not overhead:
+            return {
+                "overhead": [],
+                "analysis": {
+                    "destinations": [],
+                    "by_country": [],
+                    "by_state": [],
+                    "unique_aircraft": 0,
+                    "total_flights": 0,
+                    "total_seats": 0,
+                    "aircraft_details": [],
+                },
+                "overhead_count": 0,
+            }
+
+        # Step 2: Fetch flight histories from OpenSky (concurrent, limited)
+        # Cap at 20 aircraft to stay within rate limits
+        aircraft_to_query = overhead[:20]
+
+        async def fetch_history(ac):
+            hex_code = ac.get("hex", "")
+            if not hex_code:
+                return hex_code, []
+            flights = await fetch_aircraft_flights(hex_code, days_back=days)
+            return hex_code, flights
+
+        results = await asyncio.gather(
+            *[fetch_history(ac) for ac in aircraft_to_query],
+            return_exceptions=True,
+        )
+
+        flight_histories = {}
+        for result in results:
+            if isinstance(result, Exception):
+                continue
+            hex_code, flights = result
+            if hex_code:
+                flight_histories[hex_code] = flights
+
+        # Step 3: Analyze
+        analysis = analyze_overhead_history(overhead, flight_histories)
+
+        return {
+            "overhead": overhead,
+            "analysis": analysis,
+            "overhead_count": len(overhead),
+        }
+
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.get("/api/above-me/tracks")
+async def get_above_me_tracks(
+    lat: float = Query(37.47, ge=-90, le=90),
+    lng: float = Query(-122.23, ge=-180, le=180),
+    days: int = Query(7, ge=1, le=30),
+):
+    """Get flight track waypoints for map visualization.
+
+    Fetches tracks for up to 10 overhead aircraft to conserve API credits.
+    """
+    import asyncio
+
+    try:
+        # Get current overhead aircraft
+        aircraft = await fetch_aircraft_in_area(lat, lng, radius_nm=10)
+        overhead = find_overhead_aircraft(aircraft, lat, lng, radius_nm=10)
+
+        if not overhead:
+            return {"tracks": [], "count": 0}
+
+        # Fetch flight histories first (to get flight times)
+        aircraft_to_query = overhead[:10]
+        tracks = []
+
+        for ac in aircraft_to_query:
+            hex_code = ac.get("hex", "")
+            if not hex_code:
+                continue
+
+            flights = await fetch_aircraft_flights(hex_code, days_back=days)
+            if not flights:
+                continue
+
+            # Fetch track for the most recent flight only (conserve API calls)
+            recent = flights[0]
+            flight_time = recent.get("firstSeen")
+            if not flight_time:
+                continue
+
+            waypoints = await fetch_flight_track(hex_code, flight_time)
+            if waypoints:
+                tracks.append({
+                    "hex": hex_code,
+                    "callsign": (recent.get("callsign") or "").strip(),
+                    "type_code": ac.get("type_code", ""),
+                    "departure": recent.get("estDepartureAirport", ""),
+                    "arrival": recent.get("estArrivalAirport", ""),
+                    "waypoints": waypoints,
+                })
+
+        return {"tracks": tracks, "count": len(tracks)}
+
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 
