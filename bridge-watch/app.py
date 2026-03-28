@@ -1,6 +1,7 @@
 """Bridge Watch: US bridge condition map powered by the National Bridge Inventory."""
 
 import os
+import sqlite3
 import sys
 from pathlib import Path
 
@@ -8,15 +9,16 @@ from dotenv import load_dotenv
 from fastapi import Query, Request
 from fastapi.responses import JSONResponse
 
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from _shared.server import create_app, run_app
-from services.nbi_client import fetch_bridges, compute_stats, STATE_CODES
-
-load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+from services.nbi_client import STATE_CODES
 
 APP_DIR = Path(__file__).parent
+DB_PATH = APP_DIR / "data" / "bridges.db"
 MAPBOX_TOKEN = os.getenv("MAPBOX_TOKEN", "")
 
 app, templates = create_app(
@@ -24,6 +26,12 @@ app, templates = create_app(
     app_dir=APP_DIR,
     description="US bridge condition map from the National Bridge Inventory",
 )
+
+
+def get_db() -> sqlite3.Connection:
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 
 @app.get("/")
@@ -38,67 +46,119 @@ async def index(request: Request):
 async def get_bridges(
     state: str = Query("06", description="FIPS state code"),
 ):
-    """Fetch bridges for a state and return GeoJSON-like data with stats."""
+    """Fetch bridges for a state from local SQLite database."""
     if state not in STATE_CODES:
         return JSONResponse(
             {"error": f"Invalid state code: {state}"},
             status_code=400,
         )
-    try:
-        bridges = await fetch_bridges(state_code=state)
-        stats = compute_stats(bridges)
+
+    if not DB_PATH.exists():
         return {
-            "bridges": bridges,
-            "stats": stats,
+            "bridges": [],
+            "stats": {"total": 0, "good": 0, "fair": 0, "poor": 0,
+                       "pct_good": 0, "pct_fair": 0, "pct_poor": 0},
             "state_code": state,
             "state_name": STATE_CODES[state],
+            "error": "No bridge data loaded. Run: python3 scripts/download_nbi.py",
         }
-    except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
+
+    conn = get_db()
+    state_padded = state
+    rows = conn.execute(
+        "SELECT * FROM bridges WHERE state_code = ? LIMIT 5000",
+        (state_padded,)
+    ).fetchall()
+    conn.close()
+
+    bridges = []
+    for r in rows:
+        bridges.append({
+            "name": r["name"],
+            "lat": r["lat"],
+            "lng": r["lng"],
+            "year_built": r["year_built"],
+            "adt": r["adt"] or 0,
+            "deck": r["deck_cond"],
+            "superstructure": r["super_cond"],
+            "substructure": r["sub_cond"],
+            "condition": r["condition"],
+        })
+
+    # Compute stats
+    total = len(bridges)
+    good = sum(1 for b in bridges if b["condition"] == "good")
+    fair = sum(1 for b in bridges if b["condition"] == "fair")
+    poor = sum(1 for b in bridges if b["condition"] == "poor")
+
+    return {
+        "bridges": bridges,
+        "stats": {
+            "total": total,
+            "good": good, "fair": fair, "poor": poor,
+            "pct_good": round(good / total * 100) if total else 0,
+            "pct_fair": round(fair / total * 100) if total else 0,
+            "pct_poor": round(poor / total * 100) if total else 0,
+        },
+        "state_code": state,
+        "state_name": STATE_CODES[state],
+    }
 
 
 @app.get("/api/states")
 async def get_states():
-    """Return the list of available state codes and names."""
-    return {"states": [{"code": k, "name": v} for k, v in STATE_CODES.items()]}
+    """Return available states (those with data in the database)."""
+    if not DB_PATH.exists():
+        return {"states": [{"code": k, "name": v} for k, v in STATE_CODES.items()]}
+
+    conn = get_db()
+    loaded = conn.execute(
+        "SELECT DISTINCT state_code FROM bridges"
+    ).fetchall()
+    conn.close()
+    loaded_codes = {r["state_code"].lstrip("0") .zfill(2) for r in loaded}
+
+    return {
+        "states": [
+            {"code": k, "name": v, "loaded": k in loaded_codes}
+            for k, v in STATE_CODES.items()
+        ]
+    }
 
 
 @app.get("/data")
 async def data_sources(request: Request):
     return templates.TemplateResponse(request, "data-sources.html", {
         "app_name": "Bridge Watch",
-        "app_description": "US bridge condition map powered by the National Bridge Inventory. Visualizes structural condition ratings, age, and traffic data for 600K+ bridges.",
-        "vision_assessment": "The NBI REST API now requires an authentication token, which blocks the core data source. The app currently shows 0 bridges. The vision needs to pivot to FHWA bulk CSV downloads or find an alternative endpoint. The visualization concept (condition-coded bridge markers with age and traffic data) is sound, but the data pipeline is broken.",
-        "killer_feature": "Bridge life clock -- for any bridge you cross regularly, show its full biography: when it was built, every inspection it's ever had, how its condition scores have trended over decades, and a statistical estimate of when it will likely need major rehabilitation or replacement based on deterioration curves for its structural type. Overlay with the daily traffic count to show the risk exposure.",
+        "app_description": "US bridge condition map from the National Bridge Inventory. Visualizes structural condition ratings, age, and traffic for 600K+ bridges.",
+        "vision_assessment": "Pivoted from the NBI REST API (now requires auth) to FHWA bulk CSV downloads. Bridge data loads from local SQLite populated by download script. The visualization concept works well -- condition-coded markers with traffic and age data.",
+        "killer_feature": "Bridge life clock -- show a bridge's full biography: when built, condition trend over decades, statistical estimate of when it will need rehabilitation based on deterioration curves for its structural type, overlaid with daily traffic count to show risk exposure.",
         "data_gaps": [
-            "NBI REST API now requires auth token -- app shows 0 bridges (BLOCKED)",
-            "Need to pivot to FHWA bulk CSV downloads (annual snapshots available)",
-            "No historical inspection trend data in current implementation (only latest snapshot)",
+            "Only 10 states pre-configured (easily expandable)",
+            "No historical inspection trend data (only latest annual snapshot)",
             "No bridge closure or weight restriction alerts",
-            "No correlation with seismic risk zones for earthquake-prone regions",
-            "No funding or rehabilitation project status data",
+            "No correlation with seismic risk zones",
         ],
         "related_apis": [
-            {"name": "FHWA NBI CSV Downloads", "url": "https://www.fhwa.dot.gov/bridge/nbi/ascii.cfm", "description": "Annual bulk CSV downloads of the complete National Bridge Inventory. The fallback data source since the REST API now requires auth.", "free": True},
-            {"name": "FHWA HPMS", "url": "https://www.fhwa.dot.gov/policyinformation/hpms.cfm", "description": "Highway Performance Monitoring System. Road condition and traffic volume data that could enrich bridge context.", "free": True},
-            {"name": "USGS Earthquake Hazards", "url": "https://earthquake.usgs.gov/fdsnws/event/1/", "description": "Overlay seismic activity near bridges to assess earthquake vulnerability.", "free": True},
+            {"name": "FHWA NBI CSV Downloads", "url": "https://www.fhwa.dot.gov/bridge/nbi/ascii.cfm", "description": "Annual bulk downloads of the complete NBI. Primary data source.", "free": True},
+            {"name": "USGS Earthquake Hazards", "url": "https://earthquake.usgs.gov/", "description": "Overlay seismic activity near bridges for vulnerability assessment.", "free": True},
         ],
         "data_sources": [
             {
-                "name": "National Bridge Inventory (NBI)",
-                "url": "https://geo.dot.gov/",
-                "provider": "US Department of Transportation / Federal Highway Administration",
+                "name": "National Bridge Inventory (NBI) via FHWA CSV",
+                "url": "https://www.fhwa.dot.gov/bridge/nbi/ascii.cfm",
+                "provider": "Federal Highway Administration",
                 "coverage": "US nationwide, 600,000+ bridges",
-                "granularity": "Per bridge, with spatial query support",
-                "update_frequency": "Annually",
-                "authentication": "Now requires auth token (previously free)",
-                "rate_limits": "REST API with standard rate limiting",
-                "history": "Current inventory snapshot with year-built data",
-                "key_fields": ["structure_number", "condition_deck (0-9)", "condition_superstructure (0-9)", "condition_substructure (0-9)", "year_built", "adt (traffic count)", "lat", "lng"],
-                "caveats": "API now requires authentication -- currently blocked. Condition ratings use a 0-9 scale (9=excellent, 0=failed). Annual updates mean recently repaired bridges may still show old ratings.",
+                "granularity": "Per bridge with condition ratings, coordinates, traffic",
+                "update_frequency": "Annually (published ~June each year)",
+                "authentication": "Free download, no key required",
+                "rate_limits": "None (bulk download)",
+                "history": "Annual snapshots available for multiple years",
+                "key_fields": ["structure_number", "deck/super/sub condition (0-9)", "year_built", "ADT (traffic)", "lat/lng"],
+                "caveats": "Fixed-width text format requires parsing. Condition ratings 0-9 (9=excellent, 0=failed). Data is annual so recently repaired bridges may show old ratings.",
             },
         ],
-        "data_freshness": "Bridge data pipeline is currently blocked due to NBI REST API authentication requirement. The underlying data is updated annually by state DOTs. Pivot to FHWA bulk CSV downloads is needed to restore functionality.",
+        "data_freshness": "Bridge data is downloaded from FHWA and stored in local SQLite. Run scripts/download_nbi.py to populate. Data reflects the 2024 annual NBI snapshot.",
     })
 
 
